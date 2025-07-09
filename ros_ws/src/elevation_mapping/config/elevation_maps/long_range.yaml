@@ -1,0 +1,22 @@
+elevation_mapping:
+  ros__parameters:
+
+
+    initialize_elevation_map:                   false
+    initialization_method:                      0
+    length_in_x_init_submap:                    1.0
+    length_in_y_init_submap:                    1.0
+    init_submap_height_offset:                  0.0
+    init_submap_variance:                       0.5
+    target_frame_init_submap:                   "start"
+
+    length_in_x: 1.5
+    length_in_y: 1.5
+    position_x: 0.0
+    position_y: 0.0
+    resolution: 0.03 #0.01
+
+    #postprocessor_num_threads: 1
+    #remove_penetrated_points_rate: 5.0
+    #visibility_cleanup_rate: 10.0
+    #enable_continuous_cleanup: false

@@ -1,0 +1,7 @@
+# Noiseless ground truth measurements
+elevation_mapping:
+  ros__parameters:
+    sensor_processor:
+      type: laser
+      ignore_points_above: 0.3
+      ignore_points_below: -0.3

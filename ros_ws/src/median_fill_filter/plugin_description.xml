@@ -1,0 +1,8 @@
+<library path="libmedian_fill_filter">
+  <class name="median_fill_filter/MedianFillFilter"
+         type="grid_map::MedianFillFilter"
+         base_class_type="filters::FilterBase<grid_map::GridMap>">
+    <description>Median Fill Filter Plugin</description>
+  </class>
+</library>
+

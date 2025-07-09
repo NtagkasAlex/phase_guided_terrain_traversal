@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>point_lio</name>
+  <version>0.0.0</version>
+  <description>
+    This is a modified version of LOAM which is original algorithm
+    is described in the following paper:
+    J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
+    Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
+  </description>
+
+  <maintainer email="dflorea@uc.cl">Daniel Florea</maintainer>
+
+  <license>BSD</license>
+
+  <author email="dflorea@uc.cl">Daniel Florea</author>
+
+  <!-- ROS2 uses ament as build system -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Dependencies are now also categorized as build, build_export, and exec_depend -->
+  <depend>rclcpp</depend> <!-- roscpp in ROS1 is replaced by rclcpp in ROS2 -->
+  <depend>rclpy</depend>  <!-- rospy is replaced by rclpy in ROS2 -->
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_ros</depend> <!-- tf in ROS1 is replaced by tf2 in ROS2 -->
+  <depend>pcl_ros</depend> <!-- For PCL support -->
+  <depend>pcl_conversions</depend> <!-- For PCL support -->
+  <depend>visualization_msgs</depend> <!-- For visualization_msgs support -->
+  <!-- <depend>livox_ros_driver2</depend> -->
+
+  <!-- test_depend remains the same, but make sure the testing tools you use are compatible with ROS2 -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

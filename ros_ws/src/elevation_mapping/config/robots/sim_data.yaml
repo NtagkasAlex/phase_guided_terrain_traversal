@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    inputs: ['ground_truth_cloud']
+    ground_truth_cloud: # A name to identify the input source
+      type: pointcloud # Supported types: pointcloud
+      topic: /cloud_desckered
+      queue_size: 10
+      publish_on_update: true # Whether to publish the elevation map after a callback from this source.
+      sensor_processor:
+        type: laser
+    map_frame_id: "camera_init"
+    robot_base_frame_id: "camera_init"
+    robot_pose_with_covariance_topic: "/aft_mapped_to_init"
+    track_point_frame_id: "aft_mapped"
+    track_point_x: 0.0
+    track_point_y: 0.0
+    track_point_z: 0.0

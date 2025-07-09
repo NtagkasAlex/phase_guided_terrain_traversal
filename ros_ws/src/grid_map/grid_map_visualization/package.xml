@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>grid_map_visualization</name>
+  <version>2.0.1</version>
+  <description>Configurable tool to visualize grid maps in RViz.</description>
+  <maintainer email="mwulf@anybotics.com">Maximilian Wulf</maintainer>
+  <maintainer email="ynava@anybotics.com">Yoshua Nava</maintainer>
+  <maintainer email="ryanfriedman5410+grid_map@gmail.com">Ryan Friedman</maintainer>
+  <license>BSD</license>
+  <url type="website">http://github.com/anybotics/grid_map</url>
+  <url type="bugtracker">http://github.com/anybotics/grid_map/issues</url>
+  <author email="pfankhauser@anybotics.com">Péter Fankhauser</author>
+  
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>grid_map_cmake_helpers</build_depend>
+
+  <depend>grid_map_core</depend>
+  <depend>grid_map_msgs</depend>
+  <depend>grid_map_ros</depend>
+  <depend>nav_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
