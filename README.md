@@ -15,7 +15,7 @@ Terrain are produced using Wave Function Collapse in MuJoCo.
 ## Training Pipeline 
 
 <p align="center">
-<img src="docs/img/figure.png" alt="Main Figure" width="70%" />
+<img src="docs/img/figure.png" alt="Main Figure" width="100%" />
 </p>
 
 
