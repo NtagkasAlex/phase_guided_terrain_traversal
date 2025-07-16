@@ -18,9 +18,9 @@ from unitree_sdk2py.utils.thread import RecurrentThread
 from unitree_sdk2py.comm.motion_switcher.motion_switcher_client import MotionSwitcherClient
 from unitree_sdk2py.go2.sport.sport_client import SportClient
 # import configs.unitree_legged_const as go2
-from common.rotation_helper import get_gravity_orientation, transform_imu_data
-from common.remote_controller import RemoteController, KeyMap
-import policy_net as pn
+from deploy.common.rotation_helper import get_gravity_orientation, transform_imu_data
+from deploy.common.remote_controller import RemoteController, KeyMap
+import deploy.policy_net as pn
 # from sensor_msgs_py import point_cloud2
 # from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
@@ -43,7 +43,9 @@ except ImportError:
 
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
-from go2.go2_constants import *
+# from go2.go2_constants import *
+num_heightscans=13
+num_widthscans=9
 filename="i_believe"
 filename="policy_folder/policy177"
 
@@ -148,7 +150,7 @@ class Custom():
         self.duration_1 = int(2/pd_dt)
         self.duration_2 = int(0.5/pd_dt)
         self.duration_3 = int(3/pd_dt)
-        self.duration_4 = int(100/pd_dt)
+        self.duration_4 = int(1000/pd_dt)
         self.duration_5 = int(4/pd_dt)
 
         self.percent_1 = 0
