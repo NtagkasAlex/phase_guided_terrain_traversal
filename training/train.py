@@ -293,9 +293,9 @@ if __name__ == "__main__":
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
     parser.add_argument('--num_minibatches', type=int, default=32, help='Number of minibatches')
-    parser.add_argument('--num_timesteps', type=int, default=1, help='Total number of timesteps')
-    parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
-    parser.add_argument('--index', type=int, default=32, help='Index to save checkpoints')
+    parser.add_argument('--num_timesteps', type=int, default=100_000_000, help='Total number of timesteps')
+    parser.add_argument('--num_evals', type=int, default=15, help='Number of evaluations')
+    parser.add_argument('--index', type=int, default=33, help='Index to save checkpoints')
 
     args = parser.parse_args()
     run_training(args)
