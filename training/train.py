@@ -111,16 +111,20 @@ def run_training(args):
   env_name = 'Go2'
   if args.method=="pgtt":
     import go2.joystick_pgtt as joystick
-  else:
+  elif args.method=="baseline":
     import go2.joystick as joystick
+  elif args.method=="wild":
+    import go2.joystick_wild as joystick
   env_call=functools.partial(joystick.Joystick,task=task_name)
   locomotion.register_environment(env_name,env_call,joystick.default_config)
 
   env_cfg = registry.get_default_config(env_name)
   if args.method=="pgtt":
     env_cfg=default_config()
-  else:
+  elif args.method=="baseline":
     env_cfg=baseline_config()
+  elif args.method=="wild":
+    env_cfg=wild_config()
   # env_cfg.noise_config.scales.heightscan=0.5
   # env_cfg.command_config.u_max=[1.0,1.0,0.8]
   # env_cfg.command_config.u_min=[-1.0,-1.0,-0.8]
@@ -284,8 +288,8 @@ def get_max_numbered_folder(path):
     return max(number_folders) if number_folders else None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO with MuJoCo Playground")
-    parser.add_argument('--method', type=str, default='pgtt', help='pgtt, baseline')
-    parser.add_argument('--task_name', type=str, default='stairs', help='Task name: stairs, flat_terrain, etc.')
+    parser.add_argument('--method', type=str, default='wild', help='pgtt, baseline or wild ')
+    parser.add_argument('--task_name', type=str, default='flat_terrain', help='Task name: stairs or flat_terrain')
     parser.add_argument('--terrain_file', type=str, default='terrains/level1.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')
     parser.add_argument('--num_envs', type=int, default=4096, help='Number of parallel environments')
@@ -293,7 +297,7 @@ if __name__ == "__main__":
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
     parser.add_argument('--num_minibatches', type=int, default=32, help='Number of minibatches')
-    parser.add_argument('--num_timesteps', type=int, default=100_000_000, help='Total number of timesteps')
+    parser.add_argument('--num_timesteps', type=int, default=10_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=15, help='Number of evaluations')
     parser.add_argument('--index', type=int, default=33, help='Index to save checkpoints')
 
