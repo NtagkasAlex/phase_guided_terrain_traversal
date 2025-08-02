@@ -196,9 +196,9 @@ def wild_config() -> config_dict.ConfigDict:
               action_rate=-0.005,
               energy=-0.0005,
               # Feet.
-              feet_clearance=-0.1,
+              feet_clearance=0.1,
               feet_height=-0.,
-              feet_slip=-0.0,
+              feet_slip=-0.1,
               feet_air_time=0.0,
               feet_phase=0.0, #0.5,
               feet_swing=0.,
