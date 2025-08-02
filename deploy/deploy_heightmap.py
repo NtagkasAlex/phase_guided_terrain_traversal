@@ -39,13 +39,16 @@ try:
 except ImportError:
     print("Running without ros...")
 
-command=np.array([0.4,0,0.])
+command=np.array([0.3,0.,0.])
 stairs_enabled=True
 gait_freq=2.0
 ros_enabled=False
 render=True
 feet_scans=False
-baseline=False
+mode="pgtt"
+# mode="baseline"
+# mode="wild"
+# baseline=False
 total_time=50
 filename="./policy/perceptive/go2_no_cpg" # idk
 filename="./policy/blind/go2_height0" #good for flat
@@ -61,7 +64,7 @@ filename="policy_folder/policy3"
 # filename="policy19"
 filename="policy_folder/policy177"
 # /
-filename="policy_folder/policy183"
+# filename="policy_folder/policy42"
 # filename="flat_0"
 
 
@@ -134,7 +137,7 @@ class Controller:
         self.qpos_error_history = np.roll(self.qpos_error_history, 12)
         self.qpos_error_history[:12] = qpos_error 
         
-        if baseline:
+        if mode=="baseline":
             obs = np.hstack([
             # linvel,
             gyro,
@@ -158,20 +161,6 @@ class Controller:
                 self._last_action,
                 self.command, 
             ])
-       
-        # print(self.qvel_history)
-        #     state = np.hstack([
-        #     linvel,  # 3
-        #     gyro,  # 3
-        #     gravity,  # 3
-        #     joint_angles - self._default_pose,  # 12
-        #     joint_vel,  # 12
-        #     phase,# 8
-        #     info["heightscan"][...,2].ravel(),# N^2
-        #     info["gait_freq"],
-        #     info["last_act"],  # 12
-        #     info["command"],  # 3
-        # ])
         return obs.astype(np.float64)
     
     def get_control(self, model: mujoco.MjModel, data: mujoco.MjData) -> None:
@@ -185,7 +174,12 @@ class Controller:
             
             self._last_action=np.copy(prediction.cpu().detach().numpy().reshape(-1))
             # print(action)
-            data.ctrl=self._default_angles + self.config.action_scale * self._last_action
+            if mode=="wild":
+                # print(self.phase)
+                oscilator_angles = gait.joint_trajectory_np(self.phase,self.config.reward_config.swing_height,self.config.reward_config.base_feet_distance)
+                data.ctrl= oscilator_angles + self.config.action_scale * self._last_action
+            else:
+                data.ctrl=self._default_angles + self.config.action_scale * self._last_action
             self.motor_targets=np.copy(self._default_angles + self.config.action_scale * self._last_action)
         self._counter += 1
 
