@@ -21,6 +21,13 @@ class Joystick(go2_base.Go2Env):
   def reset(self,rng):
       rng, key = jax.random.split(rng) #this is jax's way of creating a random variable key which we use to sample from a distribution
       # randomize attributes such as q0,starting position (xy) ,starting orientation etc
+
+      # we also get a random command :
+      
+            cmd = jax.random.uniform(
+                    key2, shape=(3,), minval=self._cmd_u_min, maxval=self._cmd_u_max
+            )
+            
       # initialize info dict:
       info = {
         "rng": rng,
@@ -51,6 +58,9 @@ class Joystick(go2_base.Go2Env):
       }
       
       # this is a great way of bookeeping variables and is what jax natively uses in its mjx_env.State class
+
+      # Important: If at any point we want to have a cmd different from this we can just update the state.info["cmd"] value 
+      
       return mjx_env.State(data, obs, reward, done, metrics, info)
   def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
       #this first part is actually where simulation step is performed
