@@ -77,7 +77,28 @@ class Joystick(go2_base.Go2Env):
     data = data.replace(qpos=qpos)
     data = mjx.forward(self.mjx_model, data)
 
-    
+    rng, key1, key2, key3 = jax.random.split(rng, 4)
+    time_until_next_pert = jax.random.uniform(
+        key1,
+        minval=self._config.pert_config.kick_wait_times[0],
+        maxval=self._config.pert_config.kick_wait_times[1],
+    )
+    steps_until_next_pert = jp.round(time_until_next_pert / self.dt).astype(
+        jp.int32
+    )
+    pert_duration_seconds = jax.random.uniform(
+        key2,
+        minval=self._config.pert_config.kick_durations[0],
+        maxval=self._config.pert_config.kick_durations[1],
+    )
+    pert_duration_steps = jp.round(pert_duration_seconds / self.dt).astype(
+        jp.int32
+    )
+    pert_mag = jax.random.uniform(
+        key3,
+        minval=self._config.pert_config.velocity_kick[0],
+        maxval=self._config.pert_config.velocity_kick[1],
+    )
 
     rng, key1, key2 = jax.random.split(rng, 3)
     time_until_next_cmd = jax.random.exponential(key1) * 5.0
@@ -117,6 +138,13 @@ class Joystick(go2_base.Go2Env):
         "motor_targets":0.*jp.ones(12),
         "qpos_error_history": qpos_error_history,
         "qvel_history": qvel_history,
+        "steps_until_next_pert": steps_until_next_pert,
+        "pert_duration_seconds": pert_duration_seconds,
+        "pert_duration": pert_duration_steps,
+        "steps_since_last_pert": 0,
+        "pert_steps": 0,
+        "pert_dir": jp.zeros(3),
+        "pert_mag": pert_mag,
     }
 
     metrics = {}
@@ -141,7 +169,8 @@ class Joystick(go2_base.Go2Env):
   def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
     
     # state = self._reset_if_outside_bounds(state)
-    
+    if self._config.pert_config.enable:
+      state = self._maybe_apply_perturbation(state)
     motor_targets = self._default_pose + action * self._config.action_scale
     data = mjx_env.step(
         self.mjx_model, state.data, motor_targets, self.n_substeps
@@ -598,7 +627,61 @@ class Joystick(go2_base.Go2Env):
     rew_air_time *= cmd_norm > 0.01  # No reward for zero commands.
     return rew_air_time
 
+  def _maybe_apply_perturbation(self, state: mjx_env.State) -> mjx_env.State:
+    def gen_dir(rng: jax.Array) -> jax.Array:
+      angle = jax.random.uniform(rng, minval=0.0, maxval=jp.pi * 2)
+      return jp.array([jp.cos(angle), jp.sin(angle), 0.0])
 
+    def apply_pert(state: mjx_env.State) -> mjx_env.State:
+      t = state.info["pert_steps"] * self.dt
+      u_t = 0.5 * jp.sin(jp.pi * t / state.info["pert_duration_seconds"])
+      # kg * m/s * 1/s = m/s^2 = kg * m/s^2 (N).
+      force = (
+          u_t  # (unitless)
+          * self._torso_mass  # kg
+          * state.info["pert_mag"]  # m/s
+          / state.info["pert_duration_seconds"]  # 1/s
+      )
+      xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
+      xfrc_applied = xfrc_applied.at[self._torso_body_id, :3].set(
+          force * state.info["pert_dir"]
+      )
+      data = state.data.replace(xfrc_applied=xfrc_applied)
+      state = state.replace(data=data)
+      state.info["steps_since_last_pert"] = jp.where(
+          state.info["pert_steps"] >= state.info["pert_duration"],
+          0,
+          state.info["steps_since_last_pert"],
+      )
+      state.info["pert_steps"] += 1
+      return state
+
+    def wait(state: mjx_env.State) -> mjx_env.State:
+      state.info["rng"], rng = jax.random.split(state.info["rng"])
+      state.info["steps_since_last_pert"] += 1
+      xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
+      data = state.data.replace(xfrc_applied=xfrc_applied)
+      state.info["pert_steps"] = jp.where(
+          state.info["steps_since_last_pert"]
+          >= state.info["steps_until_next_pert"],
+          0,
+          state.info["pert_steps"],
+      )
+      state.info["pert_dir"] = jp.where(
+          state.info["steps_since_last_pert"]
+          >= state.info["steps_until_next_pert"],
+          gen_dir(rng),
+          state.info["pert_dir"],
+      )
+      return state.replace(data=data)
+
+    return jax.lax.cond(
+        state.info["steps_since_last_pert"]
+        >= state.info["steps_until_next_pert"],
+        apply_pert,
+        wait,
+        state,
+    )
  
   def sample_command(self, rng: jax.Array, x_k: jax.Array) -> jax.Array:
     rng, y_rng, w_rng, z_rng = jax.random.split(rng, 4)

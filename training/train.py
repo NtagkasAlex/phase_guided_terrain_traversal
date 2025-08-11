@@ -100,7 +100,47 @@ from mujoco_playground import locomotion
 
 from go2.configs import *
 
-def run_training(args):
+x_data, y_data, y_dataerr = [], [], []
+linvels=[]
+angvels=[]
+times = [datetime.now()]
+
+
+def progress_training(num_steps, metrics,env_cfg):
+  # clear_output(wait=True)
+
+  times.append(datetime.now())
+  x_data.append(num_steps)
+  
+  y_data.append(metrics["eval/episode_reward"])
+  y_dataerr.append(metrics["eval/episode_reward_std"])
+
+  # plt.xlim([0, ppo_params["num_timesteps"] * 1.25])
+  # plt.xlabel("# environment steps")
+  # plt.ylabel("reward per episode")
+  # plt.title(f"y={y_data[-1]:.3f}")
+  # plt.errorbar(x_data, y_data, yerr=y_dataerr, color="blue")
+  # plt.show()
+  print(y_data[-1])
+  vel_tracking_per=metrics["eval/episode_reward/tracking_lin_vel"]/(env_cfg.reward_config.scales.tracking_lin_vel* env_cfg.episode_length)
+  ang_tracking_per=metrics["eval/episode_reward/tracking_ang_vel"]/(env_cfg.reward_config.scales.tracking_ang_vel* env_cfg.episode_length)
+  average_steps=metrics["eval/avg_episode_length"]
+  # print(metrics)
+  linvels.append(vel_tracking_per)
+  angvels.append(ang_tracking_per)
+  print("Lin vel",vel_tracking_per,)
+  print("ang vel",ang_tracking_per)
+  # print(average_steps)
+  # termination critiria
+  if len(y_data)>=2:
+    if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.005:
+      return True
+    elif abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.001:
+      return True
+  return False
+
+
+def run_training(args,progress_fn):
   task_name = args.task_name
   terrain_file = args.terrain_file
   checkpoint_folder = args.checkpoint_folder
@@ -130,6 +170,8 @@ def run_training(args):
   # env_cfg.command_config.u_min=[-1.0,-1.0,-0.8]
   env_cfg.command_config.u_max=[0.6,0.6,1.0]
   env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
+  # env_cfg.command_config.u_max=[0.4,0.4,0.7]
+  # env_cfg.command_config.u_min=[-0.4,-0.4,-0.7]
   env_cfg.gait_freq=[1,3]
   env = registry.load(env_name,config=env_cfg)
   print(env.mjx_model.nbody)
@@ -152,6 +194,7 @@ def run_training(args):
         num_envs=args.num_envs,
         batch_size=args.batch_size,
         max_grad_norm=1.0,
+        num_eval_envs=args.num_eval_envs,
         network_factory=config_dict.create(
             policy_hidden_layer_sizes=(512, 256, 128),
             value_hidden_layer_sizes=(512, 256, 128),
@@ -184,10 +227,7 @@ def run_training(args):
 
 
 
-  x_data, y_data, y_dataerr = [], [], []
-  linvels=[]
-  angvels=[]
-  times = [datetime.now()]
+  progress= functools.partial(progress_fn, env_cfg=env_cfg)
 
 
   def policy_params_fn(current_step, make_policy, params):
@@ -199,38 +239,6 @@ def run_training(args):
     model.save_params(f"policy{args.index}",params)
 
 
-  def progress(num_steps, metrics):
-    # clear_output(wait=True)
-
-    times.append(datetime.now())
-    x_data.append(num_steps)
-    
-    y_data.append(metrics["eval/episode_reward"])
-    y_dataerr.append(metrics["eval/episode_reward_std"])
-
-    # plt.xlim([0, ppo_params["num_timesteps"] * 1.25])
-    # plt.xlabel("# environment steps")
-    # plt.ylabel("reward per episode")
-    # plt.title(f"y={y_data[-1]:.3f}")
-    # plt.errorbar(x_data, y_data, yerr=y_dataerr, color="blue")
-    # plt.show()
-    print(y_data[-1])
-    vel_tracking_per=metrics["eval/episode_reward/tracking_lin_vel"]/(env_cfg.reward_config.scales.tracking_lin_vel* env_cfg.episode_length)
-    ang_tracking_per=metrics["eval/episode_reward/tracking_ang_vel"]/(env_cfg.reward_config.scales.tracking_ang_vel* env_cfg.episode_length)
-    average_steps=metrics["eval/avg_episode_length"]
-    # print(metrics)
-    linvels.append(vel_tracking_per)
-    angvels.append(ang_tracking_per)
-    print("Lin vel",vel_tracking_per,)
-    print("ang vel",ang_tracking_per)
-    # print(average_steps)
-    # termination critiria
-    if len(y_data)>=2:
-      if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.005:
-        return True
-      elif abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.001:
-        return True
-    return False
     # print(list(metrics.keys()))
   randomizer = registry.get_domain_randomizer(env_name)
 
@@ -297,12 +305,12 @@ if __name__ == "__main__":
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
     parser.add_argument('--num_minibatches', type=int, default=32, help='Number of minibatches')
-    parser.add_argument('--num_timesteps', type=int, default=100_000_000, help='Total number of timesteps')
+    parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
-    parser.add_argument('--index', type=int, default=40, help='Index to save checkpoints')
-
+    parser.add_argument('--index', type=int, default=39, help='Index to save checkpoints')
+    parser.add_argument('--num_eval_envs', type=int, default=128, help='Number of evaluation environments')
     args = parser.parse_args()
-    run_training(args)
+    run_training(args,progress_training)
 
 # for jupyter or whatever
 # from types import SimpleNamespace

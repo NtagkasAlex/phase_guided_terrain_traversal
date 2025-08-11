@@ -1,5 +1,6 @@
 import mujoco
-
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from mujoco.viewer import launch_passive
 import time
 import mujoco.viewer
