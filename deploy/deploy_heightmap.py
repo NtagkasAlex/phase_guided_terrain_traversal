@@ -275,6 +275,9 @@ default_pose = model.keyframe("home").qpos[7:]
 
 mujoco.mj_step(model, data)
 
+
+
+#More init
 heightscan=create_sensor_matrix(model,data,data.qpos[:3],0)
 data.qpos[2]+=np.max(heightscan[...,2])
 print(np.max(heightscan))
@@ -289,6 +292,58 @@ sim_dt = config_dict.sim_dt
 # ctrl_dt = sim_dt
 n_substeps = int(round(ctrl_dt / sim_dt))
 model.opt.timestep = sim_dt
+
+
+#Pertubation related
+torso_body_id = model.body(consts.ROOT_BODY).id
+torso_mass = model.body_subtreemass[torso_body_id]
+
+pert_enable = True
+pert_velocity_range = [0., 5.0]
+pert_duration_range = [0.1, 0.3]
+pert_wait_range = [1.0, 3.0]
+
+# State variables
+pert_steps_since_last = 0
+pert_steps_until_next = int(np.random.uniform(*pert_wait_range) / sim_dt)
+pert_duration_steps = 0
+pert_mag = 0.0
+pert_dir = np.zeros(3)
+pert_active = False
+
+
+def maybe_apply_perturbation():
+    global pert_steps_since_last, pert_steps_until_next
+    global pert_duration_steps, pert_mag, pert_dir, pert_active
+
+    # Apply force if perturbation is active
+    if pert_active:
+        t = pert_steps_since_last * sim_dt
+        u_t = 0.5 * np.sin(np.pi * t / (pert_duration_steps * sim_dt))
+        force = (
+            u_t * torso_mass * pert_mag / (pert_duration_steps * sim_dt)
+        )
+        data.xfrc_applied[torso_body_id, :3] = force * pert_dir
+
+        pert_steps_since_last += 1
+        if pert_steps_since_last >= pert_duration_steps:
+            # End perturbation
+            pert_active = False
+            pert_steps_since_last = 0
+            pert_steps_until_next = int(np.random.uniform(*pert_wait_range) / sim_dt)
+            data.xfrc_applied[torso_body_id, :3] = 0.0
+    else:
+        # Waiting until next perturbation
+        pert_steps_until_next -= 1
+        if pert_steps_until_next <= 0:
+            # Start new perturbation
+            pert_active = True
+            pert_steps_since_last = 0
+            pert_duration_steps = int(np.random.uniform(*pert_duration_range) / sim_dt)
+            pert_mag = np.random.uniform(*pert_velocity_range)
+            angle = np.random.uniform(0, 2 * np.pi)
+            pert_dir = np.array([np.cos(angle), np.sin(angle), 0.0])
+
 
 control=Controller(policy_path=filename,config_dict=config_dict,default_pose=default_pose,n_substeps=n_substeps,dt=ctrl_dt)
 
@@ -308,6 +363,8 @@ if render:
     viewer.user_scn.ngeom+=consts.num_heightscans**2 +1 
     if feet_scans:
         viewer.user_scn.ngeom+=4*9
+    if pert_enable:
+        viewer.user_scn.ngeom+=1
     viewer.user_scn.flags[mujoco.mjtRndFlag. mjRND_SHADOW] = 0
     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
     viewer.cam.trackbodyid = 1
@@ -335,6 +392,8 @@ _data=[]
 from go2.gait import joint_gait
 trajectory=[]
 while data.time <total_time:#config_dict.episode_length*sim_dt:
+    if pert_enable:
+        maybe_apply_perturbation()
     foot_pos = data.site_xpos[_feet_site_id]  
     foot_z = foot_pos[..., -1]        
 
@@ -351,37 +410,10 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
     trajectory.append(copy.copy(data))
     control.get_control(model,data)
     command=control.command
-    # _save.append(np.copy(data.ctrl[1:3]))
-    # print(data.ctrl[1:3])
-    # data.ctrl=
-    # print(joint_gait(control.phase))
-    # print(control.phase)
-    # data.ctrl=default_pose
-    # print(data.ncon)
-    # print(joint_gait(control.phase)[1:3]+default_pose[1:3])
-    # data.ctrl=joint_gait(control.phase)+default_pose
-# 
-    # print(data.ctrl[1:3],
-    # data.ctrl[4:6],
-    # data.ctrl[7:9],
-    # data.ctrl[10:12])
 
     heightscan=control.heightscan
     n = (heightscan.shape[0] - 1) // 2  # This gives us the value of 'n' based on the shape of heightscan
-    # Extracting the four regions of the heightscan matrix
-    # top_right = heightscan[:n, n+1:,2]          # Top-right corner
-    # top_left = heightscan[:n, :n,2]             # Top-left corner
-    # back_right = heightscan[n+1:, n+1:,2]       # Back-right corner
-    # back_left = heightscan[n+1:, :n,2]         # Back-left corner
-    # back_left = heightscan[:n, n+1:,2]          # Top-right corner
-    # back_right = heightscan[:n, :n,2]             # Top-left corner
-    # top_left = heightscan[n+1:, n+1:,2]       # Back-right corner
-    # top_right = heightscan[n+1:, :n,2]         # Back-left corner
 
-        # Flatten the data
-    
-    # print(z_normal)
-    
     imu_xmat = data.site_xmat[model.site("imu").id].reshape((3, 3))
     yaw = np.arctan2(imu_xmat[1, 0], imu_xmat[0, 0])
     xyz=data.qpos[:3]+np.array([0,0,0.2])
@@ -392,7 +424,26 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
         # print(.shape)
         if render:
 
-            draw_joystick_command(viewer.user_scn,control.heightscan,xyz,yaw,command,start_idx=0)        
+            draw_joystick_command(viewer.user_scn,control.heightscan,xyz,yaw,command,start_idx=0)   
+            if pert_active:
+                arrow_from = data.xpos[torso_body_id]
+                scale_factor = 0.5  # meters per m/s of velocity_kick
+                arrow_to = arrow_from + pert_dir * (pert_mag * scale_factor)
+                mujoco.mjv_initGeom(
+                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 1],
+                    type=mujoco.mjtGeom.mjGEOM_ARROW,
+                    size=np.zeros(3),
+                    pos=np.zeros(3),
+                    mat=np.zeros(9),
+                    rgba=np.array([1, 0, 0, 0.8], dtype=np.float32),
+                )
+                mujoco.mjv_connector(
+                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 1],
+                    type=mujoco.mjtGeom.mjGEOM_ARROW,
+                    width=0.02,
+                    from_=arrow_from,
+                    to=arrow_to,
+                )    
             # if feet_scans:
             #     draw_joystick_command(viewer.user_scn,create_feet_heightscan(model,data,foot_pos[0]),start_idx=consts.num_heightscans**2+0 ,color=[0.5,0.5,0,1])    
             #     draw_joystick_command(viewer.user_scn,create_feet_heightscan(model,data,foot_pos[1]),start_idx=consts.num_heightscans**2+9 ,color=[1,0,0,1])    
