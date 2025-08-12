@@ -29,10 +29,8 @@ import go2.base as go2_base
 import go2.go2_constants as consts
 import go2.gait as gait
 from go2.heightmap import create_sensor_matrix
-
-from go2.configs import default_config,baseline_config
-
 import go2.joystick_base as joystick_base
+from go2.configs import default_config
 
 class Joystick(joystick_base.Joystick_Base):
   """Track a joystick command."""
@@ -48,10 +46,14 @@ class Joystick(joystick_base.Joystick_Base):
         config_overrides=config_overrides,
     )
 
+ 
   def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
     if self._config.pert_config.enable:
       state = self._maybe_apply_perturbation(state)
-    motor_targets = self._default_pose + action * self._config.action_scale
+    # state = self._reset_if_outside_bounds(state)
+    oscilator_pose=gait.joint_trajectory(state.info["phase"], self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance)
+
+    motor_targets = oscilator_pose + action * self._config.action_scale
     data = mjx_env.step(
         self.mjx_model, state.data, motor_targets, self.n_substeps
     )
@@ -248,7 +250,11 @@ class Joystick(joystick_base.Joystick_Base):
         noisy_gravity,  # 3
         noisy_joint_angles - self._default_pose,  # 12
         noisy_joint_vel,  # 12
+        phase,# 8
+        # qvel_history,
+        # qpos_error_history,
         noisy_heightscan, #N^2
+        info["gait_freq"],# 1
         info["last_act"],  # 12
         info["command"],  # 3
     ])
@@ -304,7 +310,7 @@ class Joystick(joystick_base.Joystick_Base):
         ),
         "energy": self._cost_energy(data.qvel[6:], data.actuator_force),
         "feet_slip": self._cost_feet_slip(data, contact, info),
-        "feet_clearance": self._cost_feet_clearance(data,info["H_max"]),
+        "feet_clearance": self._cost_feet_clearance(data,info["phase"],info["H_max"]),
      
         "feet_phase":self._reward_feet_phase(
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
@@ -323,3 +329,16 @@ class Joystick(joystick_base.Joystick_Base):
         "center":self._reward_center(data,self.init_feet_pos),
         "feet_height":self._cost_feet_height(info["swing_peak"], first_contact, info)
     }
+  def _cost_feet_clearance(self, data: mjx.Data,phase: jax.Array,H_max) -> jax.Array:
+    """Reward feet clearance when feet are in swing phase based on phi and H_max."""
+    
+    foot_pos_global= data.site_xpos[self._feet_site_id]
+    foot_z_global=foot_pos_global[...,-1]
+    x = phase / (2 * jp.pi)                        
+    swing_mask = x >= 0.5
+    clearance_mask = foot_z_global > H_max      
+
+    reward = jp.where(swing_mask & clearance_mask, 1.0, 0.0)
+
+    return jp.sum(reward)
+  
