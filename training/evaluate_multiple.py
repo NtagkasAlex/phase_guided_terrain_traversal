@@ -60,6 +60,7 @@ def sweep(method: str, ckpt_folder: str):
             num_evals=1,
             num_eval_envs=1000,
             index=0,
+            eval_flag=True, 
         )
         print(f"→ [{method}] running on {terrain} …", end="", flush=True)
         run_training(args,progress_eval)

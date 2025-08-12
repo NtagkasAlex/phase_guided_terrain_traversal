@@ -168,10 +168,14 @@ def run_training(args,progress_fn):
   # env_cfg.noise_config.scales.heightscan=0.5
   # env_cfg.command_config.u_max=[1.0,1.0,0.8]
   # env_cfg.command_config.u_min=[-1.0,-1.0,-0.8]
-  env_cfg.command_config.u_max=[0.6,0.6,1.0]
-  env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
-  # env_cfg.command_config.u_max=[0.4,0.4,0.7]
-  # env_cfg.command_config.u_min=[-0.4,-0.4,-0.7]
+  if args.eval_flag:
+      env_cfg.command_config.u_max=[0.4,0.4,0.7]
+      env_cfg.command_config.u_min=[-0.4,-0.4,-0.7]
+      env_cfg.pert_config.enable=True
+  else:
+      env_cfg.command_config.u_max=[0.6,0.6,1.0]
+      env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
+  
   env_cfg.gait_freq=[1,3]
   env = registry.load(env_name,config=env_cfg)
   print(env.mjx_model.nbody)
@@ -309,6 +313,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
     parser.add_argument('--index', type=int, default=39, help='Index to save checkpoints')
     parser.add_argument('--num_eval_envs', type=int, default=128, help='Number of evaluation environments')
+    parser.add_argument('--eval_flag', type=bool, default=False, help='True if you want to evaluate the model')
     args = parser.parse_args()
     run_training(args,progress_training)
 
