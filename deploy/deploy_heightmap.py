@@ -229,7 +229,7 @@ def draw_joystick_command(
     arrow_to = arrow_from + to * 1
 
     mujoco.mjv_initGeom(
-        geom=scn.geoms[scn.ngeom - 1],
+        geom=scn.geoms[scn.ngeom - 1 ],
         type=mujoco.mjtGeom.mjGEOM_ARROW.value,
         size=np.zeros(3),
         pos=np.zeros(3),
@@ -300,7 +300,7 @@ torso_mass = model.body_subtreemass[torso_body_id]
 
 pert_enable = True
 pert_velocity_range = [0., 5.0]
-pert_duration_range = [0.1, 0.3]
+pert_duration_range = [0.6, 1.3]
 pert_wait_range = [1.0, 3.0]
 
 # State variables
@@ -430,7 +430,7 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
                 scale_factor = 0.5  # meters per m/s of velocity_kick
                 arrow_to = arrow_from + pert_dir * (pert_mag * scale_factor)
                 mujoco.mjv_initGeom(
-                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 1],
+                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 2],
                     type=mujoco.mjtGeom.mjGEOM_ARROW,
                     size=np.zeros(3),
                     pos=np.zeros(3),
@@ -438,13 +438,23 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
                     rgba=np.array([1, 0, 0, 0.8], dtype=np.float32),
                 )
                 mujoco.mjv_connector(
-                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 1],
+                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 2],
                     type=mujoco.mjtGeom.mjGEOM_ARROW,
                     width=0.02,
                     from_=arrow_from,
                     to=arrow_to,
                 )    
+            else:
+                mujoco.mjv_initGeom(
+                    geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 2],
+                    type=mujoco.mjtGeom.mjGEOM_ARROW,
+                    size=np.zeros(3),
+                    pos=np.zeros(3),
+                    mat=np.zeros(9),
+                    rgba=np.array([1, 0, 0, 0.0], dtype=np.float32),
+                )
             # if feet_scans:
+
             #     draw_joystick_command(viewer.user_scn,create_feet_heightscan(model,data,foot_pos[0]),start_idx=consts.num_heightscans**2+0 ,color=[0.5,0.5,0,1])    
             #     draw_joystick_command(viewer.user_scn,create_feet_heightscan(model,data,foot_pos[1]),start_idx=consts.num_heightscans**2+9 ,color=[1,0,0,1])    
             #     draw_joystick_command(viewer.user_scn,create_feet_heightscan(model,data,foot_pos[2]),start_idx=consts.num_heightscans**2+18,color=[0,1,0,1])    
