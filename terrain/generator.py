@@ -2,7 +2,8 @@ import xml.etree.ElementTree as xml_et
 import numpy as np
 import cv2
 import noise
-
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 ROBOT = "go2"
 INPUT_SCENE_PATH = "./go2/xmls/scene_mjx_feetonly.xml"
 OUTPUT_SCENE_PATH ="./go2/xmls/terrain_scene_mjx.xml"
@@ -284,7 +285,27 @@ class TerrainGenerator:
         
 from wfc.wfc.wfc import WFCCore
 from getIndexes import *
+def generate_discrete(size):
+    left=(-1,0)
+    right=(1,0)
+    up=(0,1)
+    down=(0,-1)
 
+    directions=[left,down,right,up]
+    connections = {
+        0: {left: (0, 1),    down: (0,1),    right: (0,1),    up: (0,1)},  
+        1: {left: (0,1), down: (0,1), right: (0,1), up: (0,1)}
+    }
+    
+
+    wfc = WFCCore(2, connections, (size,size))
+# 
+    # wfc.init_randomly()
+    # Top and bottom rows
+    wfc.solve()
+    wave = wfc.wave.wave
+    
+    return wave
 def generate_14(size):
     left=(-1,0)
     right=(1,0)
@@ -378,6 +399,7 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
 
         tg = TerrainGenerator(width=width, step_height=height, num_stairs=num_steps, render=False)
         wave = generate_14(size=size)
+        # wave=generate_discrete(size=size)
         grid = create_centered_grid(size, tg.length)
         for i in range(grid.shape[0]):
             for j in range(grid.shape[1]):
@@ -402,6 +424,7 @@ def random_test_env(num_bodies,size):
     # print(height,width,num_steps)
     tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
     wave=generate_14(size=size)
+    # wave=generate_discrete(size=size)
     grid = create_centered_grid(size, tg.length)
 
     for i in range(grid.shape[0]):
