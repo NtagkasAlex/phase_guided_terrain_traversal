@@ -40,15 +40,28 @@ try:
 except ImportError:
     print("Running without ros...")
 
-command=np.array([0.3,0.,0.])
+
+perturbation_mode = "random"
+perturbation_mode = "fixed"
+
+
+perturbation_type="sinusoidal"
+perturbation_type = "constant" 
+
+fixed_pert_velocity = 2. # m/s
+fixed_pert_duration = 1.0   # seconds
+fixed_pert_wait = 1.0       # seconds
+fixed_pert_angle = -0.3   # radians
+
+command=np.array([0.5,0.5,0.])
 stairs_enabled=True
 gait_freq=2.0
 ros_enabled=False
 render=True
 feet_scans=False
 mode="pgtt"
-# mode="baseline"
-# mode="wild"
+mode="baseline"
+mode="wild"
 # baseline=False
 total_time=50
 filename="./policy/perceptive/go2_no_cpg" # idk
@@ -67,7 +80,10 @@ filename="policy_folder/policy177"
 # /
 # filename="policy_folder/policy42"
 # filename="flat_0"
+filename="policy93"
 
+filename="policy97"
+filename="policy101"
 
 class Controller:
     def __init__(self,policy_path,config_dict,default_pose,n_substeps,dt):
@@ -299,9 +315,9 @@ torso_body_id = model.body(consts.ROOT_BODY).id
 torso_mass = model.body_subtreemass[torso_body_id]
 
 pert_enable = True
-pert_velocity_range = [0., 5.0]
-pert_duration_range = [0.6, 1.3]
-pert_wait_range = [1.0, 3.0]
+pert_velocity_range = [4., 5.0]
+pert_duration_range = [0.6, 1.8]
+pert_wait_range = [0.2, 2.0]
 
 # State variables
 pert_steps_since_last = 0
@@ -311,18 +327,31 @@ pert_mag = 0.0
 pert_dir = np.zeros(3)
 pert_active = False
 
-
 def maybe_apply_perturbation():
     global pert_steps_since_last, pert_steps_until_next
     global pert_duration_steps, pert_mag, pert_dir, pert_active
 
+    if perturbation_mode == "fixed":
+        velocity_range = [fixed_pert_velocity, fixed_pert_velocity]
+        duration_range = [fixed_pert_duration, fixed_pert_duration]
+        wait_range = [fixed_pert_wait, fixed_pert_wait]
+
+    else:  # random
+        velocity_range = pert_velocity_range
+        duration_range = pert_duration_range
+        wait_range = pert_wait_range
+
     # Apply force if perturbation is active
     if pert_active:
-        t = pert_steps_since_last * sim_dt
-        u_t = 0.5 * np.sin(np.pi * t / (pert_duration_steps * sim_dt))
-        force = (
-            u_t * torso_mass * pert_mag / (pert_duration_steps * sim_dt)
-        )
+        if perturbation_type == "sinusoidal":
+            t = pert_steps_since_last * sim_dt
+            u_t = 0.5 * np.sin(np.pi * t / (pert_duration_steps * sim_dt))
+        else:  # constant
+            u_t = 1.0  # constant scaling factor
+
+        force = u_t * torso_mass * pert_mag / (pert_duration_steps * sim_dt)
+        data.xfrc_applied[torso_body_id, :3] = force * pert_dir
+
         data.xfrc_applied[torso_body_id, :3] = force * pert_dir
 
         pert_steps_since_last += 1
@@ -330,7 +359,7 @@ def maybe_apply_perturbation():
             # End perturbation
             pert_active = False
             pert_steps_since_last = 0
-            pert_steps_until_next = int(np.random.uniform(*pert_wait_range) / sim_dt)
+            pert_steps_until_next = int(np.random.uniform(*wait_range) / sim_dt)
             data.xfrc_applied[torso_body_id, :3] = 0.0
     else:
         # Waiting until next perturbation
@@ -339,10 +368,14 @@ def maybe_apply_perturbation():
             # Start new perturbation
             pert_active = True
             pert_steps_since_last = 0
-            pert_duration_steps = int(np.random.uniform(*pert_duration_range) / sim_dt)
-            pert_mag = np.random.uniform(*pert_velocity_range)
-            angle = np.random.uniform(0, 2 * np.pi)
+            pert_duration_steps = int(np.random.uniform(*duration_range) / sim_dt)
+            pert_mag = np.random.uniform(*velocity_range)
+            if perturbation_mode == "fixed":
+                angle = fixed_pert_angle
+            else:
+                angle = np.random.uniform(0, 2 * np.pi)
             pert_dir = np.array([np.cos(angle), np.sin(angle), 0.0])
+
 
 
 control=Controller(policy_path=filename,config_dict=config_dict,default_pose=default_pose,n_substeps=n_substeps,dt=ctrl_dt)
@@ -427,7 +460,7 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
             draw_joystick_command(viewer.user_scn,control.heightscan,xyz,yaw,command,start_idx=0)   
             if pert_active:
                 arrow_from = data.xpos[torso_body_id]
-                scale_factor = 0.5  # meters per m/s of velocity_kick
+                scale_factor = 1. # meters per m/s of velocity_kick
                 arrow_to = arrow_from + pert_dir * (pert_mag * scale_factor)
                 mujoco.mjv_initGeom(
                     geom=viewer.user_scn.geoms[viewer.user_scn.ngeom - 2],

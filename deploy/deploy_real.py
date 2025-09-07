@@ -43,21 +43,33 @@ except ImportError:
 
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
+
+import go2.gait as gait
 # from go2.go2_constants import *
 num_heightscans=13
 num_widthscans=9
+
+mode="pgtt"
+# mode="baseline"
+
+command_type="controller"
+# command_type="fixed"
+
 filename="i_believe"
 filename="policy_folder/policy177"
+# filename="policy73"
+# filename="policy77"
+filename="policy53"
 
 PHASES=np.array([0.,np.pi,np.pi,0.])
 ctrl_dt=0.02
 pd_dt=0.02
 freq=2.
-cmd_x=0.1
+cmd_x=0.2
 reorder=[3,4,5,0,1,2,9,10,11,6,7,8]
 PosStopF = 2.146e9
 VelStopF = 16000.0
-cmd_scale=np.array([0.5,0.5,0.8])
+cmd_scale=np.array([0.3,0.3,0.8])
 
 def read_points(
         cloud: PointCloud2,
@@ -127,7 +139,7 @@ class Custom():
 
     def __init__(self):
         self.Kp = 60.0 #60.0 #20 #40
-        self.Kd = 3.0 #2.0   #0.5  #1 
+        self.Kd = 1.5 #2.0   #0.5  #1 
         self.time_consume = 0
         self.rate_count = 0
         self.sin_count = 0
@@ -149,15 +161,18 @@ class Custom():
         self.startPos = [0.0] * 12
         self.duration_1 = int(2/pd_dt)
         self.duration_2 = int(0.5/pd_dt)
-        self.duration_3 = int(3/pd_dt)
+        self.duration_3 = int(5/pd_dt)
         self.duration_4 = int(1000/pd_dt)
-        self.duration_5 = int(4/pd_dt)
+        self.duration_5 = int(2/pd_dt)
+        self.duration_6 = int(5/pd_dt)
 
         self.percent_1 = 0
         self.percent_2 = 0
         self.percent_3 = 0
         self.percent_4 = 0
         self.percent_5 = 0 
+        self.percent_6 = 0 
+
         self.firstRun = True
         self.done = False
 
@@ -312,20 +327,31 @@ class Custom():
                 self.low_cmd.motor_cmd[i].kp = self.Kp
                 self.low_cmd.motor_cmd[i].kd = self.Kd
                 self.low_cmd.motor_cmd[i].tau = 0
-        if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and (self.percent_4 == 1) and (self.percent_5<=1) or self.emergency:
+        if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and (self.percent_4 == 1) and (self.percent_5<1) or self.emergency:
 
             if self.percent_5<=1e-10:
                 for i in range(12):
                     self.startPos[i] = self.low_state.motor_state[i].q
             self.percent_5 += 1.0 / self.duration_5
             self.percent_5 = min(self.percent_5, 1)
-            
-            for i in range(12):
-                self.low_cmd.motor_cmd[i].q = (1 - self.percent_5) * self.startPos[i] + self.percent_5 * self._targetPos_3[i]
-                self.low_cmd.motor_cmd[i].dq = 0
-                self.low_cmd.motor_cmd[i].kp = self.Kp
-                self.low_cmd.motor_cmd[i].kd = self.Kd
-                self.low_cmd.motor_cmd[i].tau = 0
+            if self.percent_5==1:
+                self.percent_6 += 1.0 / self.duration_6
+                self.percent_6 = min(self.percent_6, 1)
+                for i in range(12):
+                    self.low_cmd.motor_cmd[i].q = self._targetPos_3[i]
+                    self.low_cmd.motor_cmd[i].dq = 0
+                    self.low_cmd.motor_cmd[i].kp = self.Kp
+                    self.low_cmd.motor_cmd[i].kd = self.Kd
+                    self.low_cmd.motor_cmd[i].tau = 0
+            else:
+                for i in range(12):
+                    self.low_cmd.motor_cmd[i].q = (1 - self.percent_5) * self.startPos[i] + self.percent_5 * self._targetPos_3[i]
+                    self.low_cmd.motor_cmd[i].dq = 0
+                    self.low_cmd.motor_cmd[i].kp = self.Kp
+                    self.low_cmd.motor_cmd[i].kd = self.Kd
+                    self.low_cmd.motor_cmd[i].tau = 0
+
+    
         
         self.low_cmd.crc = self.crc.Crc(self.low_cmd)
         self.lowcmd_publisher.Write(self.low_cmd)
@@ -350,29 +376,48 @@ class Custom():
         phase_obs = np.concatenate([cos, sin])
         z_values=self.heightmap.ravel()
         z_normal=z_values-np.min(z_values)
- 
-        self.cmd[0] = cmd_scale[0]*self.remote_controller.ly
-        self.cmd[1] = cmd_scale[1]*self.remote_controller.lx * -1
-        self.cmd[2] = cmd_scale[2]*self.remote_controller.rx * -1
-
+        if command_type=="controller":
+            self.cmd[0] = cmd_scale[0]*self.remote_controller.ly
+            self.cmd[1] = cmd_scale[1]*self.remote_controller.lx * -1
+            self.cmd[2] = cmd_scale[2]*self.remote_controller.rx * -1
+        else:
+            self.cmd=np.array([cmd_x,0,0.])
         num_actions = 12
-
-        obs = np.hstack([
+        if mode=="baseline":
+            obs = np.hstack([
                 # linvel,#3
                 ang_vel,#3
                 gravity_orientation,#3
                 qj_obs-self.default_pos,#12
                 dqj_obs,#12
-                phase_obs,#8
+                # phase_obs,#8
                 z_normal,#N*M
-                gait_freq,#1
+                # gait_freq,#1
                 self.action,#12
                 self.cmd,#3
-        ])        # self.obs[:3]
-        
+                ])        # self.obs[:3]
+        else:
+            obs = np.hstack([
+                    # linvel,#3
+                    ang_vel,#3
+                    gravity_orientation,#3
+                    qj_obs-self.default_pos,#12
+                    dqj_obs,#12
+                    phase_obs,#8
+                    1.5*z_normal,#N*M
+                    gait_freq,#1
+                    self.action,#12
+                    self.cmd,#3
+            ])        # self.obs[:3]
+    
         obs_tensor=torch.tensor(np.asarray(obs).copy(), dtype=torch.float32).reshape((1,-1))
         self.action = self.policy_network(obs_tensor).detach().numpy().squeeze()
-        target_dof_pos = self.default_pos + self.action * self.action_scale
+        if mode=="wild":
+                # print(self.phase)
+                oscilator_angles = gait.joint_trajectory_np(self.phase,-0.2,-0.3)
+                target_dof_pos = oscilator_angles + self.action * self.action_scale
+        else:
+                target_dof_pos = self.default_pos + self.action * self.action_scale
         return target_dof_pos
     
     
@@ -392,7 +437,7 @@ if __name__ == '__main__':
     
 
     while True:        
-        if custom.percent_5 == 1.0: 
+        if custom.percent_6 >= 1.0: 
             time.sleep(1)
             print("Done!")
             sys.exit(-1)     

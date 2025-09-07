@@ -327,15 +327,15 @@ def generate_14(size):
 # 
     # wfc.init_randomly()
     # Top and bottom rows
-    outer=1
+    outer=0
     for x in range(size):
         wfc.init((x, 0), outer)          # Top row
         wfc.init((x, size - 1), outer)   # Bottom row
 
     # Left and right columns (excluding corners to avoid duplication)
-    for y in range(1, size - 1):
-        wfc.init((0, y), outer)          # Left column
-        wfc.init((size - 1, y), outer)   # Right column
+    # for y in range(1, size - 1):
+    #     wfc.init((0, y), outer)          # Left column
+    #     wfc.init((size - 1, y), outer)   # Right column
     if np.random.random()>0.0:
         
         wfc.init((size//2,size//2),0)
@@ -395,7 +395,7 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
     for env_id in range(num_envs):
         height = np.random.uniform(height_min,height_max)
         width = np.random.uniform(0.3, 0.45)
-        num_steps = np.random.choice([ 2,3,4])
+        num_steps = np.random.choice([ 1])
 
         tg = TerrainGenerator(width=width, step_height=height, num_stairs=num_steps, render=False)
         wave = generate_14(size=size)
@@ -418,9 +418,9 @@ def random_test_env(num_bodies,size):
     # height = np.random.uniform(0.05, 0.15)
     # width = np.random.uniform(0.15, 0.35)
     # num_steps = np.random.choice([3, 4, 5, 6])
-    num_steps=3
+    num_steps=4
     width=0.4
-    step_height=0.1
+    step_height=0.08
     # print(height,width,num_steps)
     tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
     wave=generate_14(size=size)
@@ -440,7 +440,7 @@ def random_test_env(num_bodies,size):
     
 if __name__ == "__main__":
 
-    size=5
+    size=9
     length=None
     num_steps=3
     width=0.1
@@ -458,7 +458,9 @@ if __name__ == "__main__":
     #     res=create_random_matrix(num_envs,num_objects,size,value,value)
     #     np.save(f"./terrains/level{number}",res)
     #     print(res.shape)
-
+    # res=create_random_matrix(num_envs,num_objects,size,0.01,0.06)
+    # np.save(f"./terrains/discrete",res)
+    # print(res.shape)
     # exit()
 
     #filling

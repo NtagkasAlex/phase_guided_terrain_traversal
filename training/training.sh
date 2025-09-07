@@ -2,14 +2,14 @@
 
 STEPS=300_000_000
 
-for ((run=0; run<10; run++)); do
+for ((run=4; run<5; run++)); do
     OFFSET=$((70 + run * 20))
 
     echo "=== Run $((run+1)) | Starting Index: $OFFSET ==="
 
     INDEXES=($((OFFSET)) $((OFFSET+1)) $((OFFSET+2)) $((OFFSET+3)))
 
-    # PGTT method
+    PGTT method
     for i in "${INDEXES[@]}"; do
         rm -r "checks_stairs/checkpoint_$i"
     done
@@ -17,7 +17,7 @@ for ((run=0; run<10; run++)); do
     python3 -m training.train \
         --method "pgtt" \
         --index "${INDEXES[0]}" \
-        --terrain_file "terrains/level04.npy" \
+        --terrain_file "terrains/level03.npy" \
         --num_timesteps "$STEPS"
 
     python3 -m training.train \
@@ -58,14 +58,14 @@ for ((run=0; run<10; run++)); do
         --method "baseline" \
         --index "${INDEXES[1]}" \
         --checkpoint_folder "checks_stairs/checkpoint_${INDEXES[0]}" \
-        --terrain_file "terrains/level06.npy" \
+        --terrain_file "terrains/level07.npy" \
         --num_timesteps "$STEPS"
 
     python3 -m training.train \
         --method "baseline" \
         --index "${INDEXES[2]}" \
         --checkpoint_folder "checks_stairs/checkpoint_${INDEXES[1]}" \
-        --terrain_file "terrains/level09.npy" \
+        --terrain_file "terrains/level10.npy" \
         --num_timesteps "$STEPS"
 
     python3 -m training.train \
@@ -75,7 +75,7 @@ for ((run=0; run<10; run++)); do
         --terrain_file "terrains/level13.npy" \
         --num_timesteps "$STEPS"
 
-    # Wild method
+    # # Wild method
     INDEXES=($((OFFSET+8)) $((OFFSET+9)) $((OFFSET+10)) $((OFFSET+11)))
 
     for i in "${INDEXES[@]}"; do
@@ -85,7 +85,7 @@ for ((run=0; run<10; run++)); do
     python3 -m training.train \
         --method "wild" \
         --index "${INDEXES[0]}" \
-        --terrain_file "terrains/level04.npy" \
+        --terrain_file "terrains/level03.npy" \
         --num_timesteps "$STEPS"
 
     python3 -m training.train \
@@ -93,7 +93,7 @@ for ((run=0; run<10; run++)); do
         --index "${INDEXES[1]}" \
         --checkpoint_folder "checks_stairs/checkpoint_${INDEXES[0]}" \
         --terrain_file "terrains/level07.npy" \
-        --num_timesteps "$STEPS"
+        --num_timesteps "$STEPS"  
 
     python3 -m training.train \
         --method "wild" \

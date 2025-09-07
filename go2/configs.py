@@ -9,6 +9,8 @@ def default_config() -> config_dict.ConfigDict:
       sim_dt=0.005,
       episode_length=1000,
       vel_percentage=0.65,
+    #   Kp=60.0,
+    #   Kd=2.0,
       Kp=40.0,
       Kd=0.5,
       action_repeat=1,
@@ -57,7 +59,7 @@ def default_config() -> config_dict.ConfigDict:
               contact=2., #2.,
               center=-0.
           ),
-          tracking_sigma=0.2,
+          tracking_sigma=0.25,
           swing_height=-0.2,
           base_feet_distance=-0.3,
         #   swing_height=-0.25,
@@ -66,9 +68,9 @@ def default_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[0.0, 3.0],
-        kick_durations=[0.05, 0.2],
-        kick_wait_times=[1.0, 3.0],
+        velocity_kick=[2.,5.],
+        kick_durations=[0.6,1.3],
+        kick_wait_times=[0.1,1.],
         ),
 
       command_config=config_dict.create(
@@ -116,24 +118,24 @@ def baseline_config() -> config_dict.ConfigDict:
               tracking_lin_vel=1.0,
               tracking_ang_vel=0.5,
               # Base reward.
-              lin_vel_z=-2.0,
+              lin_vel_z=-0.1,
               ang_vel_xy=-0.05,
-              orientation=-0.2,
+              orientation=-0.,
               # Other.
               dof_pos_limits=-1.0,
-              pose=-0.2,
+              pose=-0.5,
               # Other.
-              termination=-1.0,
-              stand_still=-0.5,
+              termination=-0.0,
+              stand_still=-1.0,
               # Regularization.
               torques=-0.0002,
-              action_rate=-0.005,
-              energy=-0.0005,
+              action_rate=-0.01,
+              energy=-0.001,
               # Feet.
-              feet_clearance=-1.0,#0.25,
+              feet_clearance=-0.5,#0.25,
               feet_height=-0.,
               feet_slip=-0.1,
-              feet_air_time=0.1,
+              feet_air_time=1.0,
               feet_phase=0.0, #0.5,
               feet_swing=0.,
               body_height=-0.,
@@ -147,9 +149,9 @@ def baseline_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[0.0, 3.0],
-        kick_durations=[0.05, 0.2],
-        kick_wait_times=[1.0, 3.0],
+        velocity_kick=[2.,5.],
+        kick_durations=[0.6,1.3],
+        kick_wait_times=[0.1,1.],
         ),
 
       command_config=config_dict.create(
@@ -226,9 +228,9 @@ def wild_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[0.0, 3.0],
-        kick_durations=[0.05, 0.2],
-        kick_wait_times=[1.0, 3.0],
+        velocity_kick=[2.,5.],
+        kick_durations=[0.6,1.3],
+        kick_wait_times=[0.1,1.],
         ),
 
       command_config=config_dict.create(

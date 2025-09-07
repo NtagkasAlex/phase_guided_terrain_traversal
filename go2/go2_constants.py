@@ -87,13 +87,13 @@ GYRO_SENSOR = "gyro"
 
 # dist_x=0.06
 # dist_y=0.06
-num_heightscans=13
-num_widthscans=9
+# num_heightscans=13
+# num_widthscans=9
 
 dist_x=0.1
 dist_y=0.1
-# num_heightscans=5
-# num_widthscans=5
+num_heightscans=11
+num_widthscans=9
 
 # dist_x=0.1
 # dist_y=0.1

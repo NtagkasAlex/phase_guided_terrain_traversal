@@ -49,7 +49,7 @@
         <geom group="3"/>
         <default class="foot">
           <!-- <geom type="sphere" size="0.0175" pos="-0.002 0 -0.213" solimp="0.9 .95 0.023" contype="0" conaffinity="1"/> -->
-          <geom type="sphere" size="0.0175" pos="-0.002 0 -0.213" solimp="0.015 1 0.031" contype="1" conaffinity="2" margin="-0.001"/>
+          <geom type="sphere" size="0.0175" pos="-0.002 0 -0.213" solimp="0.015 1 0.031" contype="1" conaffinity="2" />
           <!-- <geom type="sphere" size="0.0175" pos="-0.002 0 -0.213" solref="0.05 0.5" solimp="0.4 0.9 0.02" contype="1" conaffinity="2" margin="-0.005"/> -->
           <!-- <geom type="sphere" size="0.0175" pos="-0.002 0 -0.213" solimp="0.9 .95 0.0175" contype="1" conaffinity="2"/>         -->
 

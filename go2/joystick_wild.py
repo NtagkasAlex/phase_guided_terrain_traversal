@@ -266,13 +266,13 @@ class Joystick(joystick_base.Joystick_Base):
     privileged_state = jp.hstack([
         state,
         linvel,
-        accelerometer,  # 3
-        angvel,  # 3
-        data.actuator_force,  # 12
-        info["last_contact"],  # 4
-        feet_vel,  # 4*3
-        info["feet_air_time"],  # 4
-        data.xfrc_applied[self._torso_body_id, :3],  # 3
+        # accelerometer,  # 3
+        # angvel,  # 3
+        # data.actuator_force,  # 12
+        # info["last_contact"],  # 4
+        # feet_vel,  # 4*3
+        # info["feet_air_time"],  # 4
+        # data.xfrc_applied[self._torso_body_id, :3],  # 3
     ])
 
     return {
@@ -316,7 +316,7 @@ class Joystick(joystick_base.Joystick_Base):
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
         ),
         "body_height":self._reward_body_height(
-            data
+            data,info
         ),
         "feet_swing":self._reward_swing(
             data, info["phase"], self._config.reward_config.swing_height,info["H_max"]

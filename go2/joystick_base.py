@@ -384,13 +384,13 @@ class Joystick_Base(go2_base.Go2Env):
     privileged_state = jp.hstack([
         state,
         linvel,
-        accelerometer,  # 3
-        angvel,  # 3
-        data.actuator_force,  # 12
-        info["last_contact"],  # 4
-        feet_vel,  # 4*3
-        info["feet_air_time"],  # 4
-        data.xfrc_applied[self._torso_body_id, :3],  # 3
+        # accelerometer,  # 3
+        # angvel,  # 3
+        # data.actuator_force,  # 12
+        # info["last_contact"],  # 4
+        # feet_vel,  # 4*3
+        # info["feet_air_time"],  # 4
+        # data.xfrc_applied[self._torso_body_id, :3],  # 3
     ])
 
     return {
@@ -434,7 +434,7 @@ class Joystick_Base(go2_base.Go2Env):
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
         ),
         "body_height":self._reward_body_height(
-            data
+            data,info
         ),
         "feet_swing":self._reward_swing(
             data, info["phase"], self._config.reward_config.swing_height,info["H_max"]
@@ -452,11 +452,11 @@ class Joystick_Base(go2_base.Go2Env):
     weight=jp.array([1.,1.,0.])
     return jp.sum(jp.square(feet_pos-init)*weight)
   
-  def _reward_body_height(self,data):
-    foot_pos = data.site_xpos[self._feet_site_id]  
-    foot_z = foot_pos[..., -1]    
-    min_foot=jp.min(foot_z)
-    return jp.sum((data.qpos[2]-min_foot-0.27)**2)
+  def _reward_body_height(self,data,info):
+      body_height=data.qpos[2]
+      heightscan=info["heightscan"]
+      center_heightscan=heightscan[heightscan.shape[0]//2,heightscan.shape[1]//2,2]
+      return jp.sum((body_height-center_heightscan-self._config.reward_config.base_feet_distance)**2)
   def _reward_contact(self,phase,contact):
       x = phase / (2 * jp.pi)                        
       stance_mask = x < gait.p_stance 
@@ -613,7 +613,7 @@ class Joystick_Base(go2_base.Go2Env):
   ) -> jax.Array:
     # Reward air time.
     cmd_norm = jp.linalg.norm(commands)
-    rew_air_time = jp.sum((air_time - 0.1) * first_contact)
+    rew_air_time = jp.sum((air_time - 0.5) * first_contact)
     rew_air_time *= cmd_norm > 0.01  # No reward for zero commands.
     return rew_air_time
 

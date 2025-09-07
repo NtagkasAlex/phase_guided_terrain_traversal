@@ -133,9 +133,9 @@ def progress_training(num_steps, metrics,env_cfg):
   # print(average_steps)
   # termination critiria
   if len(y_data)>=2:
-    if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.005:
+    if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.008:
       return True
-    elif abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.001:
+    elif abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.003:
       return True
   return False
 
@@ -169,12 +169,14 @@ def run_training(args,progress_fn):
   # env_cfg.command_config.u_max=[1.0,1.0,0.8]
   # env_cfg.command_config.u_min=[-1.0,-1.0,-0.8]
   if args.eval_flag:
-      env_cfg.command_config.u_max=[0.4,0.4,0.7]
-      env_cfg.command_config.u_min=[-0.4,-0.4,-0.7]
+      env_cfg.command_config.u_max=[0.7,0.7,0.7]
+      env_cfg.command_config.u_min=[-0.7,-0.7,-0.7]
       env_cfg.pert_config.enable=True
   else:
-      env_cfg.command_config.u_max=[0.6,0.6,1.0]
-      env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
+      env_cfg.command_config.u_max=[1.0,1.0,1.0]
+      env_cfg.command_config.u_min=[-1.0,-1.0,-1.0]
+      # env_cfg.command_config.u_max=[0.6,0.6,1.0]
+      # env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
   
   env_cfg.gait_freq=[1,3]
   env = registry.load(env_name,config=env_cfg)
@@ -191,7 +193,7 @@ def run_training(args,progress_fn):
         action_repeat=1,
         unroll_length=20,
         num_minibatches=args.num_minibatches,
-        num_updates_per_batch=4,
+        num_updates_per_batch=8,
         discounting=args.discount,
         learning_rate=args.learning_rate,
         entropy_cost=1e-2,
@@ -300,18 +302,18 @@ def get_max_numbered_folder(path):
     return max(number_folders) if number_folders else None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO with MuJoCo Playground")
-    parser.add_argument('--method', type=str, default='wild', help='pgtt, baseline or wild ')
+    parser.add_argument('--method', type=str, default='baseline', help='pgtt, baseline or wild ')
     parser.add_argument('--task_name', type=str, default='stairs', help='Task name: stairs or flat_terrain')
-    parser.add_argument('--terrain_file', type=str, default='terrains/level1.npy', help='Path to terrain file')
+    parser.add_argument('--terrain_file', type=str, default='terrains/level04.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')
     parser.add_argument('--num_envs', type=int, default=4096, help='Number of parallel environments')
-    parser.add_argument('--batch_size', type=int, default=256, help='Batch size for PPO')
+    parser.add_argument('--batch_size', type=int, default=4096, help='Batch size for PPO')
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
-    parser.add_argument('--num_minibatches', type=int, default=32, help='Number of minibatches')
+    parser.add_argument('--num_minibatches', type=int, default=8, help='Number of minibatches')
     parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
-    parser.add_argument('--index', type=int, default=39, help='Index to save checkpoints')
+    parser.add_argument('--index', type=int, default=42, help='Index to save checkpoints')
     parser.add_argument('--num_eval_envs', type=int, default=128, help='Number of evaluation environments')
     parser.add_argument('--eval_flag', type=bool, default=False, help='True if you want to evaluate the model')
     args = parser.parse_args()

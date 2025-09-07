@@ -260,13 +260,13 @@ class Joystick(joystick_base.Joystick_Base):
     privileged_state = jp.hstack([
         state,
         linvel,
-        accelerometer,  # 3
-        angvel,  # 3
-        data.actuator_force,  # 12
-        info["last_contact"],  # 4
-        feet_vel,  # 4*3
-        info["feet_air_time"],  # 4
-        data.xfrc_applied[self._torso_body_id, :3],  # 3
+        # accelerometer,  # 3
+        # angvel,  # 3
+        # data.actuator_force,  # 12
+        # info["last_contact"],  # 4
+        # feet_vel,  # 4*3
+        # info["feet_air_time"],  # 4
+        # data.xfrc_applied[self._torso_body_id, :3],  # 3
     ])
 
     return {
@@ -310,7 +310,7 @@ class Joystick(joystick_base.Joystick_Base):
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
         ),
         "body_height":self._reward_body_height(
-            data
+            data,info
         ),
         "feet_swing":self._reward_swing(
             data, info["phase"], self._config.reward_config.swing_height,info["H_max"]
@@ -323,3 +323,12 @@ class Joystick(joystick_base.Joystick_Base):
         "center":self._reward_center(data,self.init_feet_pos),
         "feet_height":self._cost_feet_height(info["swing_peak"], first_contact, info)
     }
+
+  def _cost_feet_clearance(self, data: mjx.Data,H_max) -> jax.Array:
+        feet_vel = data.sensordata[self._foot_linvel_sensor_adr]
+        vel_xy = feet_vel[..., :2]
+        vel_norm = jp.sqrt(jp.linalg.norm(vel_xy, axis=-1))
+        foot_pos = data.site_xpos[self._feet_site_id]
+        foot_z = foot_pos[..., -1]
+        delta = jp.abs(foot_z - 0.1-H_max)
+        return jp.sum(delta * vel_norm)
