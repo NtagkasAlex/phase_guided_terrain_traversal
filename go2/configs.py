@@ -2,6 +2,10 @@ from ml_collections import config_dict
 
 import go2.go2_constants as consts
 
+global_pert_type=0
+global_velocity_kick=[1.5,2]
+global_kick_durations=[0.6, 1.8]
+global_kick_wait_times=[0.2, 2.0]
 
 def default_config() -> config_dict.ConfigDict:
   return config_dict.create(
@@ -68,9 +72,10 @@ def default_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[2.,5.],
-        kick_durations=[0.6,1.3],
-        kick_wait_times=[0.1,1.],
+        velocity_kick  =global_velocity_kick,
+        kick_durations=global_kick_durations,
+        kick_wait_times=global_kick_wait_times,
+        type=global_pert_type,
         ),
 
       command_config=config_dict.create(
@@ -125,7 +130,7 @@ def baseline_config() -> config_dict.ConfigDict:
               dof_pos_limits=-1.0,
               pose=-0.5,
               # Other.
-              termination=-0.0,
+              termination=-1.0,
               stand_still=-1.0,
               # Regularization.
               torques=-0.0002,
@@ -149,9 +154,11 @@ def baseline_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[2.,5.],
-        kick_durations=[0.6,1.3],
-        kick_wait_times=[0.1,1.],
+        velocity_kick=global_velocity_kick,
+        kick_durations=global_kick_durations,
+        kick_wait_times=global_kick_wait_times,
+        type=global_pert_type,
+
         ),
 
       command_config=config_dict.create(
@@ -228,9 +235,10 @@ def wild_config() -> config_dict.ConfigDict:
       ),
       pert_config=config_dict.create(
         enable=False,
-        velocity_kick=[2.,5.],
-        kick_durations=[0.6,1.3],
-        kick_wait_times=[0.1,1.],
+        velocity_kick=global_velocity_kick,
+        kick_durations=global_kick_durations,
+        kick_wait_times=global_kick_wait_times,
+        type=global_pert_type,
         ),
 
       command_config=config_dict.create(

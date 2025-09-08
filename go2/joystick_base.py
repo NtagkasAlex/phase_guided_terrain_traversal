@@ -145,6 +145,7 @@ class Joystick_Base(go2_base.Go2Env):
         "pert_steps": 0,
         "pert_dir": jp.zeros(3),
         "pert_mag": pert_mag,
+        "perturbation_type": self._config.pert_config.type,
     }
 
     metrics = {}
@@ -619,59 +620,71 @@ class Joystick_Base(go2_base.Go2Env):
 
   def _maybe_apply_perturbation(self, state: mjx_env.State) -> mjx_env.State:
     def gen_dir(rng: jax.Array) -> jax.Array:
-      angle = jax.random.uniform(rng, minval=0.0, maxval=jp.pi * 2)
-      return jp.array([jp.cos(angle), jp.sin(angle), 0.0])
+        angle = jax.random.uniform(rng, minval=0.0, maxval=jp.pi * 2)
+        return jp.array([jp.cos(angle), jp.sin(angle), 0.0])
 
     def apply_pert(state: mjx_env.State) -> mjx_env.State:
-      t = state.info["pert_steps"] * self.dt
-      u_t = 0.5 * jp.sin(jp.pi * t / state.info["pert_duration_seconds"])
-      # kg * m/s * 1/s = m/s^2 = kg * m/s^2 (N).
-      force = (
-          u_t  # (unitless)
-          * self._torso_mass  # kg
-          * state.info["pert_mag"]  # m/s
-          / state.info["pert_duration_seconds"]  # 1/s
-      )
-      xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
-      xfrc_applied = xfrc_applied.at[self._torso_body_id, :3].set(
-          force * state.info["pert_dir"]
-      )
-      data = state.data.replace(xfrc_applied=xfrc_applied)
-      state = state.replace(data=data)
-      state.info["steps_since_last_pert"] = jp.where(
-          state.info["pert_steps"] >= state.info["pert_duration"],
-          0,
-          state.info["steps_since_last_pert"],
-      )
-      state.info["pert_steps"] += 1
-      return state
+        t = state.info["pert_steps"] * self.dt
+
+        # constant (0) vs sinusoidal (1)
+        u_t = jp.where(
+            state.info["perturbation_type"] == 0,
+            1.0,  # constant scaling
+            0.5 * jp.sin(jp.pi * t / state.info["pert_duration_seconds"]),  # sinusoidal
+        )
+
+        # Force: kg * m/s * 1/s = N
+        force = (
+            u_t
+            * self._torso_mass
+            * state.info["pert_mag"]
+            / state.info["pert_duration_seconds"]
+        )
+
+        xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
+        xfrc_applied = xfrc_applied.at[self._torso_body_id, :3].set(
+            force * state.info["pert_dir"]
+        )
+
+        data = state.data.replace(xfrc_applied=xfrc_applied)
+        state = state.replace(data=data)
+
+        # reset counter if perturbation ends
+        state.info["steps_since_last_pert"] = jp.where(
+            state.info["pert_steps"] >= state.info["pert_duration"],
+            0,
+            state.info["steps_since_last_pert"],
+        )
+        state.info["pert_steps"] += 1
+        return state
 
     def wait(state: mjx_env.State) -> mjx_env.State:
-      state.info["rng"], rng = jax.random.split(state.info["rng"])
-      state.info["steps_since_last_pert"] += 1
-      xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
-      data = state.data.replace(xfrc_applied=xfrc_applied)
-      state.info["pert_steps"] = jp.where(
-          state.info["steps_since_last_pert"]
-          >= state.info["steps_until_next_pert"],
-          0,
-          state.info["pert_steps"],
-      )
-      state.info["pert_dir"] = jp.where(
-          state.info["steps_since_last_pert"]
-          >= state.info["steps_until_next_pert"],
-          gen_dir(rng),
-          state.info["pert_dir"],
-      )
-      return state.replace(data=data)
+        state.info["rng"], rng = jax.random.split(state.info["rng"])
+        state.info["steps_since_last_pert"] += 1
+
+        xfrc_applied = jp.zeros((self.mjx_model.nbody, 6))
+        data = state.data.replace(xfrc_applied=xfrc_applied)
+
+        # Reset counters + pick new direction if starting new perturbation
+        state.info["pert_steps"] = jp.where(
+            state.info["steps_since_last_pert"] >= state.info["steps_until_next_pert"],
+            0,
+            state.info["pert_steps"],
+        )
+        state.info["pert_dir"] = jp.where(
+            state.info["steps_since_last_pert"] >= state.info["steps_until_next_pert"],
+            gen_dir(rng),
+            state.info["pert_dir"],
+        )
+        return state.replace(data=data)
 
     return jax.lax.cond(
-        state.info["steps_since_last_pert"]
-        >= state.info["steps_until_next_pert"],
+        state.info["steps_since_last_pert"] >= state.info["steps_until_next_pert"],
         apply_pert,
         wait,
         state,
     )
+
  
   def sample_command(self, rng: jax.Array, x_k: jax.Array) -> jax.Array:
     rng, y_rng, w_rng, z_rng = jax.random.split(rng, 4)
