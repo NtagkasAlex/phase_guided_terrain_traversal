@@ -90,8 +90,8 @@ def main():
 
     checkpoints = {
     "pgtt": [ "checks_stairs/checkpoint_93", "checks_stairs/checkpoint_113", "checks_stairs/checkpoint_133","checks_stairs/checkpoint_153"],
-    # "baseline": [ "checks_stairs/checkpoint_97", "checks_stairs/checkpoint_117", "checks_stairs/checkpoint_137","checks_stairs/checkpoint_157"],
-    # "wild": [ "checks_stairs/checkpoint_101", "checks_stairs/checkpoint_121", "checks_stairs/checkpoint_141","checks_stairs/checkpoint_161"],
+    "baseline": [ "checks_stairs/checkpoint_97", "checks_stairs/checkpoint_117", "checks_stairs/checkpoint_137","checks_stairs/checkpoint_157"],
+    "wild": [ "checks_stairs/checkpoint_101", "checks_stairs/checkpoint_121", "checks_stairs/checkpoint_141","checks_stairs/checkpoint_161"],
     }
     # checkpoints = {
     # "pgtt": [ "checks_stairs/checkpoint_93", "checks_stairs/checkpoint_113", "checks_stairs/checkpoint_133"],

@@ -51,9 +51,9 @@ perturbation_type = "constant"
 fixed_pert_velocity = 2. # m/s
 fixed_pert_duration = 1.0   # seconds
 fixed_pert_wait = 1.0       # seconds
-fixed_pert_angle = -1.3   # radians
+fixed_pert_angle = -0.4   # radians
 
-command=np.array([0.7,0.5,0.])
+command=np.array([0.6,0.4,0.])
 stairs_enabled=True
 gait_freq=2.0
 ros_enabled=False
@@ -61,7 +61,7 @@ render=True
 feet_scans=False
 mode="pgtt"
 mode="baseline"
-# mode="wild"
+mode="wild"
 # baseline=False
 total_time=50
 filename="./policy/perceptive/go2_no_cpg" # idk
@@ -83,7 +83,7 @@ filename="policy_folder/policy177"
 filename="policy93"
 
 filename="policy97"
-# filename="policy101"
+filename="policy101"
 
 class Controller:
     def __init__(self,policy_path,config_dict,default_pose,n_substeps,dt):
@@ -285,7 +285,6 @@ model.actuator_biasprm[:, 1] = -config_dict.Kp
 data = mujoco.MjData(model)
 data.qpos= model.keyframe("home").qpos
 default_pose = model.keyframe("home").qpos[7:]
-# data.qpos[0]+=2.5
 # data.qpos[1]+=.45
 
 

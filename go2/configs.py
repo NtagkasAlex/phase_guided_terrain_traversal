@@ -3,8 +3,8 @@ from ml_collections import config_dict
 import go2.go2_constants as consts
 
 global_pert_type=0
-global_velocity_kick=[1.5,2]
-global_kick_durations=[0.6, 1.8]
+global_velocity_kick=[0.5,2]
+global_kick_durations=[0.3, 1.8]
 global_kick_wait_times=[0.2, 2.0]
 
 def default_config() -> config_dict.ConfigDict:
