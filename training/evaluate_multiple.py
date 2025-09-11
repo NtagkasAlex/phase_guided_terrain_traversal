@@ -24,7 +24,6 @@ def progress_eval(num_steps, metrics,env_cfg):
     term_vals=metrics["eval/final_reward/termination"]
     count = int(jnp.sum(jnp.abs(term_vals) < 0.5))
     survival_rate = count / 1000
-
     energy = metrics["eval/episode_reward/torques"]/ env_cfg.reward_config.scales.torques 
 
     eval_metrics_all.append({
@@ -102,15 +101,25 @@ def main():
     Path("plots").mkdir(exist_ok=True)
 
 
+    # === Discrete terrain sweep only ===
     for method, ckpt_list in checkpoints.items():
         for ckpt_idx, ckpt_path in enumerate(ckpt_list, start=1):
-            for height in range(1, 10): # 1 cm to 10 cm
-                print(f"→ [{method}] ckpt {ckpt_idx} on height {height}cm …", end="", flush=True)
-                # print()
-                results = sweep(method, ckpt_path, ckpt_idx, height)
-                filename = f"plots/{method}_dist_ckpt{ckpt_idx}_h{height:02d}.npy"
-                np.save(filename, np.array(results, dtype=object))
-                print(f" saved {filename}")
+            print(f"→ [{method}] ckpt {ckpt_idx} on discrete terrain …", end="", flush=True)
+            results = sweep_discrete(method, ckpt_path)
+            filename = f"plots/{method}_discrete_ckpt{ckpt_idx}.npy"
+            np.save(filename, np.array(results, dtype=object))
+            print(f" saved {filename}")
+
+    print("\nAll discrete evaluations complete. Results saved in plots/.")
+    # for method, ckpt_list in checkpoints.items():
+    #     for ckpt_idx, ckpt_path in enumerate(ckpt_list, start=1):
+    #         for height in range(1, 10): # 1 cm to 10 cm
+    #             print(f"→ [{method}] ckpt {ckpt_idx} on height {height}cm …", end="", flush=True)
+    #             # print()
+    #             results = sweep(method, ckpt_path, ckpt_idx, height)
+    #             filename = f"plots/{method}_dist_ckpt{ckpt_idx}_h{height:02d}.npy"
+    #             np.save(filename, np.array(results, dtype=object))
+    #             print(f" saved {filename}")
 
 
     print("\nAll evaluations complete. Results saved in plots/.")
