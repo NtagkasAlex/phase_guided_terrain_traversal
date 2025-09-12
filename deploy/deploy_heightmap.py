@@ -48,20 +48,20 @@ perturbation_mode = "fixed"
 perturbation_type="sinusoidal"
 perturbation_type = "constant" 
 
-fixed_pert_velocity = 2. # m/s
+fixed_pert_velocity = 1. # m/s
 fixed_pert_duration = 1.0   # seconds
 fixed_pert_wait = 1.0       # seconds
 fixed_pert_angle = -0.4   # radians
 
-command=np.array([0.6,0.4,0.])
-stairs_enabled=True
+command=np.array([0.0,0.0,0.])
+stairs_enabled=False
 gait_freq=2.0
 ros_enabled=False
 render=True
 feet_scans=False
 mode="pgtt"
-mode="baseline"
-mode="wild"
+# mode="baseline"
+# mode="wild"
 # baseline=False
 total_time=50
 filename="./policy/perceptive/anymal_no_cpg" # idk
@@ -82,8 +82,8 @@ filename="policy_folder/policy177"
 # filename="flat_0"
 filename="policy93"
 
-filename="policy97"
-filename="policy101"
+# filename="policy97"
+# filename="policy101"
 
 class Controller:
     def __init__(self,policy_path,config_dict,default_pose,n_substeps,dt):
@@ -278,9 +278,9 @@ else:
 # )
 # model = mujoco.MjModel.from_xml_path("./anymal/xmls/scene_mjx.xml")
 # config_dict.Kp=50
-model.dof_damping[6:] = config_dict.Kd
-model.actuator_gainprm[:, 0] = config_dict.Kp   
-model.actuator_biasprm[:, 1] = -config_dict.Kp
+# model.dof_damping[6:] = config_dict.Kd
+# model.actuator_gainprm[:, 0] = config_dict.Kp   
+# model.actuator_biasprm[:, 1] = -config_dict.Kp
 
 data = mujoco.MjData(model)
 data.qpos= model.keyframe("home").qpos
@@ -289,8 +289,6 @@ default_pose = model.keyframe("home").qpos[7:]
 
 
 mujoco.mj_step(model, data)
-
-
 
 #More init
 heightscan=create_sensor_matrix(model,data,data.qpos[:3],0)
@@ -308,12 +306,12 @@ sim_dt = config_dict.sim_dt
 n_substeps = int(round(ctrl_dt / sim_dt))
 model.opt.timestep = sim_dt
 
-
+print(model.ngeom,model.nbody)
 #Pertubation related
 torso_body_id = model.body(consts.ROOT_BODY).id
 torso_mass = model.body_subtreemass[torso_body_id]
 
-pert_enable = True
+pert_enable = False
 pert_velocity_range = [4., 5.0]
 pert_duration_range = [0.6, 1.8]
 pert_wait_range = [0.2, 2.0]
@@ -389,7 +387,7 @@ def key_callback(keycode):
 
 
 if render:
-    viewer = launch_passive(model, data,key_callback=key_callback,show_left_ui=False,show_right_ui=False)
+    viewer = launch_passive(model, data,key_callback=key_callback,show_left_ui=True,show_right_ui=False)
     viewer.user_scn.ngeom+=consts.num_heightscans**2 +1 
     if feet_scans:
         viewer.user_scn.ngeom+=4*9
@@ -424,20 +422,20 @@ trajectory=[]
 while data.time <total_time:#config_dict.episode_length*sim_dt:
     if pert_enable:
         maybe_apply_perturbation()
-    foot_pos = data.site_xpos[_feet_site_id]  
-    foot_z = foot_pos[..., -1]        
-
-    sensor_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SENSOR, 'FR_foot')
+    # foot_pos = data.site_xpos[_feet_site_id]  
+    # foot_z = foot_pos[..., -1]        
+    # print(foot_z)
+    sensor_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SENSOR, 'FR_pos')
     start_idx = model.sensor_adr[sensor_id]
     dim = model.sensor_dim[sensor_id]
     accel = data.sensordata[start_idx:start_idx+dim]
-    # print("Accel:", accel)
+    # print("Accel:", accel[2])
     # print(data.qpos[7:10])
     # select=viewer._pert.select
     # print(data.site_xpos[0])  
     # _data.append(foot_z[1])
-    _data.append(foot_z[0])
-    trajectory.append(copy.copy(data))
+    # _data.append(foot_z[0])
+    # trajectory.append(copy.copy(data))
     control.get_control(model,data)
     command=control.command
 
@@ -445,6 +443,7 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
     n = (heightscan.shape[0] - 1) // 2  # This gives us the value of 'n' based on the shape of heightscan
 
     imu_xmat = data.site_xmat[model.site("imu").id].reshape((3, 3))
+    # imu_xmat=np.eye(3)
     yaw = np.arctan2(imu_xmat[1, 0], imu_xmat[0, 0])
     xyz=data.qpos[:3]+np.array([0,0,0.2])
     if not paused:

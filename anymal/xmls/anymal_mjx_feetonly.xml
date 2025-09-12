@@ -1,7 +1,14 @@
 <mujoco model="anymal_c">
   <compiler angle="radian" meshdir="assets" texturedir="assets" autolimits="true"/>
 
-  <option iterations="1" ls_iterations="4" solver="Newton" cone="pyramidal" impratio="100">
+  <option cone="pyramidal" impratio="100" iterations="5" ls_iterations="5">
+    <flag eulerdamp="disable"/>
+  </option>
+ <custom> 
+    <numeric data="4" name="max_contact_points"/>  
+    <numeric data="25" name="max_geom_pairs"/> 
+ </custom> 
+ <option iterations="5" ls_iterations="5" timestep="0.005" integrator="Euler">
     <flag eulerdamp="disable"/>
   </option>
 
@@ -19,7 +26,7 @@
         <geom group="3" type="capsule"/>
         <default class="foot">
           <geom type="sphere" size="0.03" pos="0 0 0.02325" priority="1" solimp="0.015 1 0.031" solref="0.02 1"
-            condim="3" friction="0.8 0.02 0.01"/>
+            condim="3" friction="0.8 0.02 0.01"  contype="1" conaffinity="2"/>
         </default>
       </default>
       <default class="affine">
@@ -119,6 +126,7 @@
       <geom pos="-0.4145 0 0" material="face" mesh="face" class="visual_zflip"/>
       <geom material="battery" mesh="battery" class="visual"/>
       <geom pos="0.116 0 0.073" material="hatch" mesh="hatch" class="visual"/>
+      <site name="imu" pos="0 0 0 "/>
       <body name="LF_HIP" pos="0.2999 0.104 0" quat="0.258819 0.965926 0 0">
         <inertial mass="2.781" pos="0.0566606 -0.015294 -0.00829784" quat="-0.127978 0.709783 -0.135278 0.679359"
           diaginertia="0.00585729 0.00491868 0.00329081"/>
@@ -139,7 +147,8 @@
             <geom quat="1 0 0 -1" material="shank_l" mesh="shank_l" class="visual"/>
             <geom pos="0.01305 -0.08795 -0.33797" quat="0.382683 0 0 -0.92388" material="foot" mesh="foot"
               class="visual"/>
-            <geom class="foot" pos="0.01305 -0.08795 -0.31547"/>
+            <geom name="FL" class="foot" pos="0.01305 -0.08795 -0.31547"/>
+            <site name="FL_foot" pos="0.01305 -0.08795 -0.31547"/>
           </body>
         </body>
       </body>
@@ -162,7 +171,8 @@
             <joint name="RF_KFE" axis="-1 0 0" range="-9.42478 9.42478"/>
             <geom quat="1 0 0 1" material="shank" mesh="shank_r" class="visual"/>
             <geom pos="0.01305 0.08795 -0.33797" quat="0.382683 0 0 0.92388" material="foot" mesh="foot" class="visual"/>
-            <geom class="foot" pos="0.01305 0.08795 -0.31547"/>
+            <geom name="FR" class="foot" pos="0.01305 0.08795 -0.31547"/>
+            <site name="FR_foot" pos="0.01305 0.08795 -0.31547"/>
           </body>
         </body>
       </body>
@@ -186,7 +196,8 @@
             <geom quat="-1 0 0 -1" material="shank" mesh="shank_r" class="visual"/>
             <geom pos="0.01305 0.08795 -0.33797" quat="-0.382683 0 0 -0.92388" material="foot" mesh="foot"
               class="visual"/>
-            <geom class="foot" pos="0.01305 0.08795 -0.31547"/>
+            <geom name="RL" class="foot" pos="0.01305 0.08795 -0.31547"/>
+            <site name="RL_foot" pos="0.01305 0.08795 -0.31547"/>
           </body>
         </body>
       </body>
@@ -210,14 +221,15 @@
             <geom quat="1 0 0 -1" material="shank_l" mesh="shank_l" class="visual"/>
             <geom pos="0.01305 -0.08795 -0.33797" quat="0.382683 0 0 -0.92388" material="foot" mesh="foot"
               class="visual"/>
-            <geom class="foot" pos="0.01305 -0.08795 -0.31547"/>
+            <geom name="RR" class="foot" pos="0.01305 -0.08795 -0.31547"/>
+            <site name="RR_foot" pos="0.01305 -0.08795 -0.31547"/>
           </body>
         </body>
       </body>
     </body>
   </worldbody>
 
-  <contact>
+  <!-- <contact>
     <exclude body1="base" body2="LF_THIGH"/>
     <exclude body1="base" body2="RF_THIGH"/>
     <exclude body1="base" body2="LH_THIGH"/>
@@ -228,8 +240,52 @@
     <exclude body1="RH_SHANK" body2="LF_SHANK"/>
     <exclude body1="LH_SHANK" body2="RF_SHANK"/>
     <exclude body1="LH_SHANK" body2="RH_SHANK"/>
-  </contact>
+  </contact> -->
 
+    <sensor>
+    <!-- <jointpos joint="FL_hip_joint" name="abduction_front_left_pos"/>
+    <jointpos joint="FL_thigh_joint" name="hip_front_left_pos"/>
+    <jointpos joint="FL_calf_joint" name="knee_front_left_pos"/>
+    <jointpos joint="RL_hip_joint" name="abduction_hind_left_pos"/>
+    <jointpos joint="RL_thigh_joint" name="hip_hind_left_pos"/>
+    <jointpos joint="RL_calf_joint" name="knee_hind_left_pos"/>
+    <jointpos joint="FR_hip_joint" name="abduction_front_right_pos"/>
+    <jointpos joint="FR_thigh_joint" name="hip_front_right_pos"/>
+    <jointpos joint="FR_calf_joint" name="knee_front_right_pos"/>
+    <jointpos joint="RR_hip_joint" name="abduction_hind_right_pos"/>
+    <jointpos joint="RR_thigh_joint" name="hip_hind_right_pos"/>
+    <jointpos joint="RR_calf_joint" name="knee_hind_right_pos"/>
+    <jointvel joint="FL_hip_joint" name="abduction_front_left_vel"/>
+    <jointvel joint="FL_thigh_joint" name="hip_front_left_vel"/>
+    <jointvel joint="FL_calf_joint" name="knee_front_left_vel"/>
+    <jointvel joint="RL_hip_joint" name="abduction_hind_left_vel"/>
+    <jointvel joint="RL_thigh_joint" name="hip_hind_left_vel"/>
+    <jointvel joint="RL_calf_joint" name="knee_hind_left_vel"/>
+    <jointvel joint="FR_hip_joint" name="abduction_front_right_vel"/>
+    <jointvel joint="FR_thigh_joint" name="hip_front_right_vel"/>
+    <jointvel joint="FR_calf_joint" name="knee_front_right_vel"/>
+    <jointvel joint="RR_hip_joint" name="abduction_hind_right_vel"/>
+    <jointvel joint="RR_thigh_joint" name="hip_hind_right_vel"/>
+    <jointvel joint="RR_calf_joint" name="knee_hind_right_vel"/> -->
+    <gyro site="imu" name="gyro"/>
+    <accelerometer site="imu" name="accelerometer"/>
+    <framequat objtype="site" objname="imu" name="orientation"/>
+    <framepos objtype="site" objname="imu" name="global_position"/>
+    <framelinvel objtype="site" objname="imu" name="global_linvel"/>
+    <frameangvel objtype="site" objname="imu" name="global_angvel"/>
+    <!-- returns local velocity of robot -->
+    <velocimeter site="imu" name="local_linvel"/> 
+    <framezaxis objtype="site" objname="imu" name="upvector"/>
+    <framepos objtype="site" objname="FR_foot" name="FR_pos" reftype="site" refname="imu"/>
+    <framepos objtype="site" objname="FL_foot" name="FL_pos" reftype="site" refname="imu"/>
+    <framepos objtype="site" objname="RR_foot" name="RR_pos" reftype="site" refname="imu"/>
+    <framepos objtype="site" objname="RL_foot" name="RL_pos" reftype="site" refname="imu"/>
+    <framelinvel objtype="site" objname="FR_foot" name="FR_foot_global_linvel"/>
+    <framelinvel objtype="site" objname="FL_foot" name="FL_foot_global_linvel"/>
+    <framelinvel objtype="site" objname="RR_foot" name="RR_foot_global_linvel"/>
+    <framelinvel objtype="site" objname="RL_foot" name="RL_foot_global_linvel"/>
+  </sensor>
+  
   <actuator>
     <position class="affine" joint="LF_HAA" name="LF_HAA"/>
     <position class="affine" joint="LF_HFE" name="LF_HFE"/>
@@ -247,7 +303,7 @@
 
   <!-- A higher standing position -->
   <keyframe>
-    <key name="standing"
+    <key name="home"
       qpos="0.0 0.0 0.56 1.0 0.0 0.0 0.0 0.0 0.5235987755982988 -0.7853981 0.0 0.5235987755982988 -0.7853981 0.0 -0.5235987755982988 0.7853981 0.0 -0.5235987755982988 0.7853981"/>
   </keyframe>
 </mujoco>

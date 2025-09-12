@@ -15,7 +15,7 @@ HUGE_STAIRS="./go2/xmls/huge_stairs.xml"
 # OUTPUT_SCENE_PATH ="./terrain/scene_terrain.xml"
 # TEST_SCENE_PATH ="./terrain/scene_test.xml"
 ROBOT = "anymal"
-INPUT_SCENE_PATH = "./anymal/xmls/scene_mjx_feetonly_flat_terrain.xml"
+INPUT_SCENE_PATH = "./anymal/xmls/scene_mjx_feetonly.xml"
 OUTPUT_SCENE_PATH ="./anymal/xmls/terrain_scene_mjx.xml"
 TEST_SCENE_PATH ="./anymal/xmls/terrain_test_mjx.xml"
 DATA_SCENE_PATH="./anymal/xmls/data.xml"
@@ -470,12 +470,12 @@ if __name__ == "__main__":
     # exit()
 
     # filling
-    # tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
-    # wave=generate_14(size=size)
-    # grid = create_centered_grid(size, tg.length)
-    # for i in range(num_objects):
-    #     tg.AddBox([100+i,100+i,10])
-    # tg.Save()
+    tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
+    wave=generate_14(size=size)
+    grid = create_centered_grid(size, tg.length)
+    for i in range(num_objects):
+        tg.AddBox([100+i,100+i,10])
+    tg.Save()
 
     #Uncomment for one random terrain for testing.
     random_test_env(num_objects,size)
