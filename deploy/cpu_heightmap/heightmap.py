@@ -1,7 +1,7 @@
 import mujoco
 import numpy as np
 from functools import partial
-from go2.go2_constants import *
+from anymal.anymal_constants import *
 
 def raycast_sensor(model, data, pos):
     ray_sensor_site = np.array([pos[0], pos[1], pos[2]])

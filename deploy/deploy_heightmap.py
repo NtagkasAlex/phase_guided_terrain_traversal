@@ -7,13 +7,13 @@ import mujoco.viewer
 import numpy as np
 import matplotlib.pyplot as plt
 
-import go2.base as go2_base
-import go2.joystick_pgtt as joystick
-import go2.go2_constants as consts
+import anymal.base as anymal_base
+import anymal.joystick_pgtt as joystick
+import anymal.anymal_constants as consts
 import policy_net as pn
 import torch
 from cpu_heightmap.heightmap import create_sensor_matrix,create_feet_heightscan
-import go2.gait as gait
+import anymal.gait as gait
 import copy
 
 try:
@@ -64,12 +64,12 @@ mode="baseline"
 mode="wild"
 # baseline=False
 total_time=50
-filename="./policy/perceptive/go2_no_cpg" # idk
-filename="./policy/blind/go2_height0" #good for flat
-# filename="./policy/perceptive/go2_after_fine_only_swing" #best so far
-# filename="go2_new5"
-# filename="go2_w_dr_50m"
-filename="go2_w_dr_100m"
+filename="./policy/perceptive/anymal_no_cpg" # idk
+filename="./policy/blind/anymal_height0" #good for flat
+# filename="./policy/perceptive/anymal_after_fine_only_swing" #best so far
+# filename="anymal_new5"
+# filename="anymal_w_dr_50m"
+filename="anymal_w_dr_100m"
 
 filename="i_believe"
 # filename="test"
@@ -264,19 +264,19 @@ config_dict=joystick.default_config()
 if stairs_enabled:
     model = mujoco.MjModel.from_xml_path(
         consts.TEST_STAIRS_XML.as_posix(),
-        assets=go2_base.get_assets(),
+        assets=anymal_base.get_assets(),
     )
 else:
     model = mujoco.MjModel.from_xml_path(
         consts.FEET_ONLY_FLAT_TERRAIN_XML.as_posix(),
-        assets=go2_base.get_assets(),
+        assets=anymal_base.get_assets(),
     )
 
 # model = mujoco.MjModel.from_xml_path(
 #       consts.HUGE_STAIRS_XML.as_posix(),
-#       assets=go2_base.get_assets(),
+#       assets=anymal_base.get_assets(),
 # )
-# model = mujoco.MjModel.from_xml_path("./go2/xmls/scene_mjx.xml")
+# model = mujoco.MjModel.from_xml_path("./anymal/xmls/scene_mjx.xml")
 # config_dict.Kp=50
 model.dof_damping[6:] = config_dict.Kd
 model.actuator_gainprm[:, 0] = config_dict.Kp   
@@ -419,7 +419,7 @@ _save=[]
 # data.qpos[2]=0.4
 # 
 _data=[]
-from go2.gait import joint_gait
+from anymal.gait import joint_gait
 trajectory=[]
 while data.time <total_time:#config_dict.episode_length*sim_dt:
     if pert_enable:
