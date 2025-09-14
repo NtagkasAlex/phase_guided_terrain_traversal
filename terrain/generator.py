@@ -333,7 +333,7 @@ def generate_14(size):
 # 
     # wfc.init_randomly()
     # Top and bottom rows
-    outer=0
+    outer=1
     for x in range(size):
         wfc.init((x, 0), outer)          # Top row
         wfc.init((x, size - 1), outer)   # Bottom row
@@ -342,7 +342,7 @@ def generate_14(size):
     for y in range(1, size - 1):
         wfc.init((0, y), outer)          # Left column
         wfc.init((size - 1, y), outer)   # Right column
-    if np.random.random()>0.5:
+    if np.random.random()>0.0:
         
         wfc.init((size//2,size//2),0)
     else:
@@ -354,6 +354,8 @@ def generate_14(size):
 
 def addElement(map:TerrainGenerator,index,pos):
     height=map.block_height
+    # height = random.uniform(0.05, map.block_height)
+
     if index==0:
         return
         map.AddFlat(init_pos=[pos[0],pos[1],0.],height=0.)
@@ -424,8 +426,8 @@ def random_test_env(num_bodies,size):
     # height = np.random.uniform(0.05, 0.15)
     # width = np.random.uniform(0.15, 0.35)
     # num_steps = np.random.choice([3, 4, 5, 6])
-    num_steps=5
-    width=0.5
+    num_steps=7
+    width=0.45
     step_height=0.08
     # print(height,width,num_steps)
     tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
@@ -446,7 +448,7 @@ def random_test_env(num_bodies,size):
     
 if __name__ == "__main__":
 
-    size=7
+    size=5
     length=None
     num_steps=3
     width=0.1

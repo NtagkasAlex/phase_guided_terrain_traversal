@@ -54,9 +54,9 @@ fixed_pert_duration = 1.0   # seconds
 fixed_pert_wait = 1.0       # seconds
 fixed_pert_angle = -0.4   # radians
 
-command=np.array([0.5,0.5,0.])
+command=np.array([0.5,0.,0.])
 stairs_enabled=True
-gait_freq=1.5
+gait_freq=1.3
 ros_enabled=True
 render=True
 feet_scans=False
@@ -64,7 +64,7 @@ mode="pgtt"
 # mode="baseline"
 # mode="wild"
 # baseline=False
-total_time=50
+total_time=100
 filename="./policy/perceptive/anymal_no_cpg" # idk
 filename="./policy/blind/anymal_height0" #good for flat
 # filename="./policy/perceptive/anymal_after_fine_only_swing" #best so far
@@ -143,7 +143,7 @@ class Controller:
         # print(self._counter)
         if ros_enabled and self._counter % self._n_substeps == 0:
             rclpy.spin_once(self.node)
-            self.command= self.node.get_velocity()*np.array([0.7,0.7,1.0])
+            self.command= self.node.get_velocity()*np.array([0.5,0.5,0.5])
         # --- History tracking ---
        
         qpos_error = data.qpos[7:]  - (self._default_angles + self.config.action_scale * self._last_action)
@@ -387,7 +387,7 @@ def key_callback(keycode):
 
 
 if render:
-    viewer = launch_passive(model, data,key_callback=key_callback,show_left_ui=True,show_right_ui=False)
+    viewer = launch_passive(model, data,key_callback=key_callback,show_left_ui=False,show_right_ui=False)
     viewer.user_scn.ngeom+=consts.num_heightscans**2 +1 
     if feet_scans:
         viewer.user_scn.ngeom+=4*9
@@ -396,6 +396,10 @@ if render:
     viewer.user_scn.flags[mujoco.mjtRndFlag. mjRND_SHADOW] = 0
     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
     viewer.cam.trackbodyid = 1
+    viewer.cam.distance = 3.0    # Distance from target
+    viewer.cam.azimuth = 60     # Horizontal rotation angle (deg)
+    viewer.cam.elevation = -20   # Vertical rotation angle (deg)
+    # viewer.cam.lookat[:] = [0, 0, 1]  # Point the camera looks at (x,y,z)
     viewer.sync()
 start_time = time.time()
 
