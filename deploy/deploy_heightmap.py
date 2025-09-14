@@ -47,16 +47,17 @@ perturbation_mode = "fixed"
 
 perturbation_type="sinusoidal"
 perturbation_type = "constant" 
+pert_enable = False
 
 fixed_pert_velocity = 1. # m/s
 fixed_pert_duration = 1.0   # seconds
 fixed_pert_wait = 1.0       # seconds
 fixed_pert_angle = -0.4   # radians
 
-command=np.array([0.0,0.0,0.])
-stairs_enabled=False
-gait_freq=2.0
-ros_enabled=False
+command=np.array([0.5,0.5,0.])
+stairs_enabled=True
+gait_freq=1.5
+ros_enabled=True
 render=True
 feet_scans=False
 mode="pgtt"
@@ -80,7 +81,7 @@ filename="policy_folder/policy177"
 # /
 # filename="policy_folder/policy42"
 # filename="flat_0"
-filename="policy93"
+filename="policy17"
 
 # filename="policy97"
 # filename="policy101"
@@ -142,7 +143,7 @@ class Controller:
         # print(self._counter)
         if ros_enabled and self._counter % self._n_substeps == 0:
             rclpy.spin_once(self.node)
-            self.command= self.node.get_velocity()*np.array([0.5,0.5,1.0])
+            self.command= self.node.get_velocity()*np.array([0.7,0.7,1.0])
         # --- History tracking ---
        
         qpos_error = data.qpos[7:]  - (self._default_angles + self.config.action_scale * self._last_action)
@@ -278,9 +279,9 @@ else:
 # )
 # model = mujoco.MjModel.from_xml_path("./anymal/xmls/scene_mjx.xml")
 # config_dict.Kp=50
-# model.dof_damping[6:] = config_dict.Kd
-# model.actuator_gainprm[:, 0] = config_dict.Kp   
-# model.actuator_biasprm[:, 1] = -config_dict.Kp
+model.dof_damping[6:] = config_dict.Kd
+model.actuator_gainprm[:, 0] = config_dict.Kp   
+model.actuator_biasprm[:, 1] = -config_dict.Kp
 
 data = mujoco.MjData(model)
 data.qpos= model.keyframe("home").qpos
@@ -311,7 +312,6 @@ print(model.ngeom,model.nbody)
 torso_body_id = model.body(consts.ROOT_BODY).id
 torso_mass = model.body_subtreemass[torso_body_id]
 
-pert_enable = False
 pert_velocity_range = [4., 5.0]
 pert_duration_range = [0.6, 1.8]
 pert_wait_range = [0.2, 2.0]
@@ -491,7 +491,7 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
             #     pass
 
             viewer.sync()
-    time.sleep(0.002)
+    time.sleep(0.001)
 plt.plot(_data)
 plt.show()
 # np.save("joint_traj",_save)

@@ -10,13 +10,13 @@ global_kick_wait_times=[0.2, 2.0]
 def default_config() -> config_dict.ConfigDict:
   return config_dict.create(
       ctrl_dt=0.02,
-      sim_dt=0.005,
+      sim_dt=0.002,
       episode_length=1000,
       vel_percentage=0.65,
     #   Kp=60.0,
     #   Kd=2.0,
-      Kp=100.0,
-      Kd=1.,
+      Kp=80.0,
+      Kd=2.,
       action_repeat=1,
       action_scale=0.5,
       history_len=2,
@@ -39,18 +39,18 @@ def default_config() -> config_dict.ConfigDict:
               tracking_lin_vel=1.0,
               tracking_ang_vel=0.5,
               # Base reward.
-              lin_vel_z=-1.0,
+              lin_vel_z=-0.5,
               ang_vel_xy=-0.05,
               orientation=-0.2,
               # Other.
-              dof_pos_limits=-1.0,
+              dof_pos_limits=-0.0,
               pose=-1.0,
               # Other.
               termination=-1.0,
               stand_still=-0.0,
               # Regularization.
               torques=-0.0002,
-              action_rate=-0.01,
+              action_rate=-0.001,
               energy=-0.0005,
               # Feet.
               feet_clearance=-0.,
@@ -64,8 +64,8 @@ def default_config() -> config_dict.ConfigDict:
               center=-0.
           ),
           tracking_sigma=0.25,
-          swing_height=-0.2,
-          base_feet_distance=-0.3,
+          swing_height=-0.4,
+          base_feet_distance=-0.5,
         #   swing_height=-0.25,
         #   base_feet_distance=-0.35,
           phase_sigma=0.05,

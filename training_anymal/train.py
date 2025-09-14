@@ -175,7 +175,7 @@ def run_training(args,progress_fn):
       # env_cfg.command_config.u_max=[0.6,0.6,1.0]
       # env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
   
-  env_cfg.gait_freq=[1,3]
+  env_cfg.gait_freq=[1,1.5]
   env = registry.load(env_name,config=env_cfg)
   print(env.mjx_model.nbody)
   print(env.action_size)
@@ -299,15 +299,15 @@ def get_max_numbered_folder(path):
     return max(number_folders) if number_folders else None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO with MuJoCo Playground")
-    parser.add_argument('--method', type=str, default='baseline', help='pgtt, baseline or wild ')
+    parser.add_argument('--method', type=str, default='pgtt', help='pgtt, baseline or wild ')
     parser.add_argument('--task_name', type=str, default='stairs', help='Task name: stairs or flat_terrain')
     parser.add_argument('--terrain_file', type=str, default='terrains/level04.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')
-    parser.add_argument('--num_envs', type=int, default=4096, help='Number of parallel environments')
-    parser.add_argument('--batch_size', type=int, default=4096, help='Batch size for PPO')
+    parser.add_argument('--num_envs', type=int, default=2048, help='Number of parallel environments')
+    parser.add_argument('--batch_size', type=int, default=512, help='Batch size for PPO')
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
-    parser.add_argument('--num_minibatches', type=int, default=8, help='Number of minibatches')
+    parser.add_argument('--num_minibatches', type=int, default=16, help='Number of minibatches')
     parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
     parser.add_argument('--index', type=int, default=42, help='Index to save checkpoints')
