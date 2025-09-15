@@ -1,9 +1,10 @@
-# PGGT
+# PGTT: Phase-Guided Terrain Traversal for Perceptive Legged Locomotion
+## Submitted to ICRA 2026
 <p align="center">
 <img src="docs/img/real.jpg" alt="Example Gait" width="70%" />
 </p>
 
-A perceptive reinforcement learning locomotion framework developed for the Unitree GO2 in simulation (MuJoco Playground) and deployed using unitree sdk2py, on real hardware.
+A perceptive reinforcement learning locomotion framework developed for the Unitree GO2 in simulation (MuJoco MJX) and deployed using unitree sdk2py, on real hardware.
 <p align="center">
 <img src="docs/img/sim.jpg" alt="Example Gait" width="70%" />
 </p>
@@ -45,7 +46,6 @@ pip install playground
 ## Training 
 To train the policy run the bash file as:
 ```bash
-cd training
-./training.sh
+bash training/training.sh
 ```
 Additionally you could modify the hyperparameters from inside this file or the training difficulty.
