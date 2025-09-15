@@ -15,7 +15,7 @@ action = env._default_pose
 state = env.step(state, action)
 ```
 ```bash
-class Joystick(go2_base.Go2Env):
+class Joystick_Base(go2_base.Go2Env):
   def __init__(self,...):
       # initialize configure dictionary and add model parameters . These are done in go2.base class
   def reset(self,rng):
@@ -30,31 +30,7 @@ class Joystick(go2_base.Go2Env):
             
       # initialize info dict:
       info = {
-        "rng": rng,
-        "command": cmd,
-        "step":0,
-        "steps_until_next_cmd": steps_until_next_cmd,
-        "phase":gait.PHASES,
-        "phase_dt":2*jp.pi*self.dt*gait_freq,
-        "gait_freq":gait_freq,
-        "last_act": jp.zeros(self.mjx_model.nu),
-        "last_last_act": jp.zeros(self.mjx_model.nu),
-        "feet_air_time": jp.zeros(4),
-        "last_contact": jp.zeros(4, dtype=bool),
-        "swing_peak": jp.zeros(4),
-        "H_max":0.1*jp.ones(4),
-        "heightscan":heightscan,
-        "H_min":0.*jp.ones(4),
-        "motor_targets":0.*jp.ones(12),
-        "qpos_error_history": qpos_error_history,
-        "qvel_history": qvel_history,
-        "steps_until_next_pert": steps_until_next_pert,
-        "pert_duration_seconds": pert_duration_seconds,
-        "pert_duration": pert_duration_steps,
-        "steps_since_last_pert": 0,
-        "pert_steps": 0,
-        "pert_dir": jp.zeros(3),
-        "pert_mag": pert_mag,
+      ...
       }
       
       # this is a great way of bookeeping variables and is what jax natively uses in its mjx_env.State class
@@ -114,3 +90,5 @@ class Joystick(go2_base.Go2Env):
 
     
 ```
+We can inherent from the above and create any environment we want (e.g. change reset,step or rewards).
+
