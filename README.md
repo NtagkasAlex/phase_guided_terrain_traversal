@@ -48,4 +48,7 @@ To train the policy run the bash file as:
 ```bash
 bash training/training.sh
 ```
-Additionally you could modify the hyperparameters from inside this file or the training difficulty.
+Additionally, you could modify the hyperparameters from inside this file or the training difficulty.
+
+## Instructions 
+For more detailed instructions, please refer to the README file in each folder.
