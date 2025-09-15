@@ -1,6 +1,6 @@
 from ml_collections import config_dict
 
-import go2.go2_constants as consts
+# import go2.go2_constants as consts
 
 global_pert_type=0
 global_velocity_kick=[0.5,2]
@@ -87,7 +87,6 @@ def default_config() -> config_dict.ConfigDict:
           b=[0.9, 0.25, 0.5],
       ),
       gait_freq=[2,6],
-      heighmap_size=(consts.num_heightscans,consts.num_widthscans),
       
   )
 
@@ -170,7 +169,6 @@ def baseline_config() -> config_dict.ConfigDict:
           b=[0.9, 0.25, 0.5],
       ),
       gait_freq=[2,6],
-      heighmap_size=(consts.num_heightscans,consts.num_widthscans),
       
   )
 
@@ -250,6 +248,5 @@ def wild_config() -> config_dict.ConfigDict:
           b=[0.9, 0.25, 0.5],
       ),
       gait_freq=[2,6],
-      heighmap_size=(consts.num_heightscans,consts.num_widthscans),
       
   )

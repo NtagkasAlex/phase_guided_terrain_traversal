@@ -4,16 +4,7 @@ import cv2
 import noise
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-ROBOT = "go2"
-INPUT_SCENE_PATH = "./go2/xmls/scene_mjx_feetonly.xml"
-OUTPUT_SCENE_PATH ="./go2/xmls/terrain_scene_mjx.xml"
-TEST_SCENE_PATH ="./go2/xmls/terrain_test_mjx.xml"
-DATA_SCENE_PATH="./go2/xmls/data.xml"
-HUGE_STAIRS="./go2/xmls/huge_stairs.xml"
 
-# INPUT_SCENE_PATH = "./terrain/scene.xml"
-# OUTPUT_SCENE_PATH ="./terrain/scene_terrain.xml"
-# TEST_SCENE_PATH ="./terrain/scene_test.xml"
 ROBOT = "anymal"
 INPUT_SCENE_PATH = "./anymal/xmls/scene_mjx_feetonly.xml"
 OUTPUT_SCENE_PATH ="./anymal/xmls/terrain_scene_mjx.xml"

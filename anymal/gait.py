@@ -5,12 +5,11 @@ import jax.numpy as jp
 import mujoco
 import numpy as np
 import matplotlib.pyplot as plt
-import go2.base as go2_base
-import go2.go2_constants as consts
+# import go2.base as go2_base
+# import go2.go2_constants as consts
 from jax import lax
 from mujoco.viewer import launch_passive
 # from configs import *
-# URDF GO2 real values
 HIP_LENGTH = 0.0955
 THIGH_LENGTH = 0.213
 CALF_LENGTH = 0.2135
@@ -278,133 +277,3 @@ def joint_trajectory_np(
     ]).reshape(-1)
 
 
-
-if __name__=="__main__":
-    model = mujoco.MjModel.from_xml_path(
-        consts.FEET_ONLY_FLAT_TERRAIN_XML.as_posix(),
-        assets=go2_base.get_assets(),
-    )
-    # config_dict=default_config()
-    model.dof_damping[6:] = 0.5
-    model.actuator_gainprm[:, 0] = 40
-    model.actuator_biasprm[:, 1] = -40
-
-    data = mujoco.MjData(model)
-    data.qpos= model.keyframe("home").qpos
-    default_state=model.keyframe("home").qpos
-    default_pose = model.keyframe("home").qpos[7:]
-    # data.qpos[0]+=2.5
-
-    # data.qpos[2]=0.4
-
-    mujoco.mj_step(model, data)
-
-    viewer = launch_passive(model, data)
-    phi=np.array([0.0,np.pi,np.pi,0])
-    dt=0.01
-    f=2
-    model.opt.timestep = dt
-
-    while data.time< 10:
-        phi+=dt*2*np.pi*f
-        phi=np.fmod(phi,2*jp.pi)
-    # #     # foot_num=0
-    #     foot_num=1
-    #     z=get_z(phi, swing_height=jp.array([-0.2]), swing_min=jp.array([-0.3]))
-    #     # print(z)
-    #     x_off=0.15
-    #     y_off=0.15
-    #     p1=np.array([x_off,-y_off,z[0]])#FR
-    #     p2=np.array([x_off,y_off,z[1]])#FL
-    #     p3=np.array([x_off,-y_off,z[2]])#RR
-    #     p4=np.array([x_off,y_off,z[3]])#RL
-        data.ctrl=joint_trajectory(phi, swing_height=jp.array([-0.2]), swing_min=jp.array([-0.3]))
-        # data.ctrl=default_pose    
-        # data.ctrl[:3]=get_robot_joints_np(p1, 1) 
-        # data.ctrl[3:6]=get_robot_joints_np(p2,0) 
-        # data.ctrl[6:9]=get_robot_joints_np(p3, 1) 
-        # data.ctrl[9:12]=get_robot_joints_np(p4, 0) 
-        # p=np.array([0.25,0.1,-0.25])
-
-        # data.ctrl[3:6]=get_robot_joints_np(p, 0) 
-
-        # data.qpos[2]+=.1
-
-        mujoco.mj_step(model, data)
-        # data.qpos[:7]=default_state[:7]
-        # data.qpos[2]=0.4
-# 
-        viewer.sync()
-        
-    exit()
-    
-    exit()
-    # x=np.linspace(0,2*jp.pi,500)
-    x=np.load("pgtt_lift_times.npy")[300:600]
-    x=np.load("baseline_lift_times.npy")[0:300]
-
-    phases=jp.array([0,jp.pi,0,jp.pi])
-    phases=jp.array([0])
-    plt.figure(figsize=(8, 5))
-    plt.ylim([-0.4,-0.1])
-    plt.ylim([-0.01,0.12])
-
-    # data=np.load("joint_traj.npy")
-    # print(data.shape)
-    data=np.load("pgtt_lift.npy")[300:600]
-    data=np.load("baseline_lift.npy")[0:300]
-
-    for phase in phases:
-
-        y = [get_z(jp.fmod(2*jp.pi*2*_x + phase,2*jp.pi),swing_height=jp.array([0.1]),swing_min=jp.array([0.])) for _x in x] 
-        # y = [joint_gait(jp.fmod(6*_x + phase,2*jp.pi))[1:3]+np.array([0.9,-1.8]) for _x in x] 
-        plt.plot(x,data,label="Actual Leg Trajectory")
-        # plt.plot(x, y, label="Desired Leg Trajectory")
-    # plt.plot(x, data[:500, 0], label='Element 1')
-    # plt.plot(x, data[:500, 1], label='Element 2')
-
-   
-    # plt.show()
-
-    swing_start = 2*p_stance*jp.pi
-    swing_end = 2* jp.pi
-    swing_height = -0.32
-
-    plt.annotate("", xy=(swing_end, swing_height), xytext=(swing_start, swing_height),
-                arrowprops=dict(arrowstyle="<->", color="red", linewidth=1.5))
-
-    
-    plt.text((swing_start + swing_end) / 2, swing_height + 0.005, "Swing Phase", 
-            color="red", ha="center", fontsize=12)
-    
-    swing_start = 0.
-    swing_end = 2*p_stance*jp.pi
-    swing_height = -0.32 
-
-    plt.annotate("", xy=(swing_end, swing_height), xytext=(swing_start, swing_height),
-                arrowprops=dict(arrowstyle="<->", color="red", linewidth=1.5))
-
-    # Adding text label
-    plt.text((swing_start + swing_end) / 2, swing_height + 0.005, "Stance Phase", 
-            color="red", ha="center", fontsize=12)
-
-    plt.xlabel("Time(s)")
-    plt.ylabel("Swing Height")
-    plt.legend()
-    plt.grid()
-
-    grad = np.gradient(data, x)
-
-# make the plot
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(x, data, label="Actual Leg Trajectory")
-    plt.plot(x, grad, label="Gradient d(data)/d(x)", linestyle="--")
-    plt.xlabel("x (time)")
-    plt.ylabel("Value / Gradient")
-    # plt.ylim(-0.5, 0.5)         # adjust as needed
-    plt.legend()
-    plt.grid()
-
-    plt.title("Trajectory and Its Gradient")
-
-    plt.show()
