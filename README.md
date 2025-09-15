@@ -26,7 +26,9 @@ Terrain are produced using Wave Function Collapse in MuJoCo.
 ## Real World Experiment
 The resulting policy deployed in the real world. We use Point-Lio for odometry and Gridmap to extract the desired heightmap.
 
-https://github.com/user-attachments/assets/a4221723-5fef-4b0d-8983-a331abba30b8
+
+https://github.com/user-attachments/assets/06f6cd29-2e20-4c2a-a6c7-c1781c9743b1
+
 
 
 For more details and/or the full paper contact me at : alex.ntagkas@gmail.com
