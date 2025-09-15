@@ -1,19 +1,3 @@
-# Copyright 2025 DeepMind Technologies Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""Defines Unitree go2 quadruped constants."""
-
 from etils import epath
 
 from mujoco_playground._src import mjx_env
@@ -82,24 +66,9 @@ LOCAL_LINVEL_SENSOR = "local_linvel"
 ACCELEROMETER_SENSOR = "accelerometer"
 GYRO_SENSOR = "gyro"
 
-# num_heightscans=15
-# num_widthscans=9
-
-# dist_x=0.06
-# dist_y=0.06
-# num_heightscans=13
-# num_widthscans=9
 
 dist_x=0.1
 dist_y=0.1
 num_heightscans=11
 num_widthscans=9
 
-# dist_x=0.1
-# dist_y=0.1
-
-# num_heightscans=13
-# num_widthscans=9
-
-# dist_x=0.07
-# dist_y=0.07

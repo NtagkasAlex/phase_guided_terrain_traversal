@@ -107,30 +107,21 @@ times = [datetime.now()]
 
 
 def progress_training(num_steps, metrics,env_cfg):
-  # clear_output(wait=True)
-
   times.append(datetime.now())
   x_data.append(num_steps)
   
   y_data.append(metrics["eval/episode_reward"])
   y_dataerr.append(metrics["eval/episode_reward_std"])
 
-  # plt.xlim([0, ppo_params["num_timesteps"] * 1.25])
-  # plt.xlabel("# environment steps")
-  # plt.ylabel("reward per episode")
-  # plt.title(f"y={y_data[-1]:.3f}")
-  # plt.errorbar(x_data, y_data, yerr=y_dataerr, color="blue")
-  # plt.show()
   print(y_data[-1])
   vel_tracking_per=metrics["eval/episode_reward/tracking_lin_vel"]/(env_cfg.reward_config.scales.tracking_lin_vel* env_cfg.episode_length)
   ang_tracking_per=metrics["eval/episode_reward/tracking_ang_vel"]/(env_cfg.reward_config.scales.tracking_ang_vel* env_cfg.episode_length)
   average_steps=metrics["eval/avg_episode_length"]
-  # print(metrics)
   linvels.append(vel_tracking_per)
   angvels.append(ang_tracking_per)
   print("Lin vel",vel_tracking_per,)
   print("ang vel",ang_tracking_per)
-  # print(average_steps)
+
   # termination critiria
   if len(y_data)>=2:
     if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.008:
@@ -165,9 +156,7 @@ def run_training(args,progress_fn):
     env_cfg=baseline_config()
   elif args.method=="wild":
     env_cfg=wild_config()
-  # env_cfg.noise_config.scales.heightscan=0.5
-  # env_cfg.command_config.u_max=[1.0,1.0,0.8]
-  # env_cfg.command_config.u_min=[-1.0,-1.0,-0.8]
+
   if args.eval_flag:
       env_cfg.command_config.u_max=[0.7,0.7,0.7]
       env_cfg.command_config.u_min=[-0.7,-0.7,-0.7]
@@ -175,8 +164,7 @@ def run_training(args,progress_fn):
   else:
       env_cfg.command_config.u_max=[1.0,1.0,1.0]
       env_cfg.command_config.u_min=[-1.0,-1.0,-1.0]
-      # env_cfg.command_config.u_max=[0.6,0.6,1.0]
-      # env_cfg.command_config.u_min=[-0.6,-0.6,-1.0]
+
   
   env_cfg.gait_freq=[1,3]
   env = registry.load(env_name,config=env_cfg)
@@ -204,10 +192,6 @@ def run_training(args,progress_fn):
         network_factory=config_dict.create(
             policy_hidden_layer_sizes=(512, 256, 128),
             value_hidden_layer_sizes=(512, 256, 128),
-            # policy_hidden_layer_sizes=(512, 256,256, 128),
-            # value_hidden_layer_sizes=(512, 256,256, 128),
-            # policy_hidden_layer_sizes=(128, 128, 128, 128),
-            # value_hidden_layer_sizes=(256, 256, 256, 256, 256),
             policy_obs_key="state",
             value_obs_key="privileged_state",
         ),

@@ -9,8 +9,7 @@ import go2.base as go2_base
 import go2.go2_constants as consts
 from jax import lax
 from mujoco.viewer import launch_passive
-# from configs import *
-# URDF GO2 real values
+
 HIP_LENGTH = 0.0955
 THIGH_LENGTH = 0.213
 CALF_LENGTH = 0.2135

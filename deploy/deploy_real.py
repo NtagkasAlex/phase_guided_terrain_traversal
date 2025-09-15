@@ -45,7 +45,7 @@ from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 
 import go2.gait as gait
-# from go2.go2_constants import *
+
 num_heightscans=13
 num_widthscans=9
 
@@ -55,10 +55,6 @@ mode="pgtt"
 command_type="controller"
 # command_type="fixed"
 
-filename="i_believe"
-filename="policy_folder/policy177"
-# filename="policy73"
-# filename="policy77"
 filename="policy53"
 
 PHASES=np.array([0.,np.pi,np.pi,0.])
