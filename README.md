@@ -1,7 +1,11 @@
 # PGGT
+<p align="center">
+<img src="docs/img/real.jpg" alt="Example Gait" width="70%" />
+</p>
+
 A perceptive reinforcement learning locomotion framework developed for the Unitree GO2 in simulation (MuJoco Playground) and deployed using unitree sdk2py, on real hardware.
 <p align="center">
-<img src="docs/img/example_gait.png" alt="Example Gait" width="70%" />
+<img src="docs/img/sim.jpg" alt="Example Gait" width="70%" />
 </p>
 
 ## Terrain Generation
