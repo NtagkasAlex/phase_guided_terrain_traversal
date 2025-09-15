@@ -31,8 +31,6 @@ https://github.com/user-attachments/assets/06f6cd29-2e20-4c2a-a6c7-c1781c9743b1
 
 
 
-For more details and/or the full paper contact me at : alex.ntagkas@gmail.com
-
 ## Installation
 
 Install the required dependencies:
