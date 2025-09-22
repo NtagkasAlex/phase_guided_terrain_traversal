@@ -1,5 +1,4 @@
 # PGTT: Phase-Guided Terrain Traversal for Perceptive Legged Locomotion
-## Submitted to ICRA 2026
 <p align="center">
 <img src="docs/img/real.jpg" alt="Example Gait" width="70%" />
 </p>
