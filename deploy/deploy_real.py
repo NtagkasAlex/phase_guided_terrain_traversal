@@ -135,7 +135,7 @@ class Custom():
 
     def __init__(self):
         self.Kp = 60.0 #60.0 #20 #40
-        self.Kd = 1.5 #2.0   #0.5  #1 
+        self.Kd = 2. #2.0   #0.5  #1 
         self.time_consume = 0
         self.rate_count = 0
         self.sin_count = 0
@@ -400,7 +400,7 @@ class Custom():
                     qj_obs-self.default_pos,#12
                     dqj_obs,#12
                     phase_obs,#8
-                    1.5*z_normal,#N*M
+                    z_normal,#N*M
                     gait_freq,#1
                     self.action,#12
                     self.cmd,#3
