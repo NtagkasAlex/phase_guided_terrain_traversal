@@ -32,15 +32,27 @@ https://github.com/user-attachments/assets/06f6cd29-2e20-4c2a-a6c7-c1781c9743b1
 
 
 ## Installation
+Create a conda environment(recommended)
+```bash
+conda create -n pgtt python=3.12 -y
+conda activate pgtt
+```
+
+Install jax for GPU for your cuda version.
+To find your cuda version 
+```bash
+nvidia-smi
+```
+
+```bash
+pip install -U "jax[cuda_13]"
+```
+if cuda version is 13
 
 Install the required dependencies:
 
 ```bash
-pip install mujoco==3.3.0
-pip install mujoco_mjx==3.3.0
-pip install brax==0.12.1
-pip install jax==0.5.0
-pip install playground
+pip install -r requirements.txt
 ```
 ## Training 
 To train the policy run the bash file as:
