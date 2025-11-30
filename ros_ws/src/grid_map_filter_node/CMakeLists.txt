@@ -26,7 +26,10 @@ add_executable(filters_demo_node
   src/filters_demo_node.cpp
   src/FiltersDemo.cpp
 )
-
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
 ament_target_dependencies(filters_demo_node
   rclcpp
   grid_map_ros

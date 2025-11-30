@@ -9,7 +9,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # Declare the RViz argument
     rviz_arg = DeclareLaunchArgument(
-        'rviz', default_value='false',
+        'rviz', default_value='False',
         description='Flag to launch RViz.')
 
     # Node parameters, including those from the YAML configuration file
