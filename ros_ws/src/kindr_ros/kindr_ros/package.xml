@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>kindr_ros</name>
+  <version>0.3.4</version>
+  <description>The kindr_ros package</description>
+  <maintainer email="rdiethelm@anybotics.com">Remo Diethelm</maintainer>
+  <maintainer email="pleemann@anybotics.com">Philipp Leemann</maintainer>
+
+  <license>BSD</license>
+  <url type="website">https://github.com/anybotics/kindr_ros</url>
+
+  <author email="cgehring@anybotics.com">Christian Gehring</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>eigen3_cmake_module</buildtool_depend>
+
+  <buildtool_export_depend>eigen3_cmake_module</buildtool_export_depend>
+
+  <depend>kindr</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2</depend>
+  <build_depend>eigen</build_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+
+  <build_export_depend>eigen</build_export_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
