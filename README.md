@@ -21,7 +21,7 @@ cd ros_ws
 colcon build --merge-install --install-base /root/ros_ws/install --symlink-install
 ```
 ### Running the pipeline
-Make sure /utlidar/cloud and /utlidar/imu topics are providing data.
+Make sure ``` /utlidar/cloud ``` and ``` /utlidar/imu ``` topics are providing data.
 ```bash
 docker run -it --rm   -e DISPLAY=$DISPLAY   -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev 
 ```
