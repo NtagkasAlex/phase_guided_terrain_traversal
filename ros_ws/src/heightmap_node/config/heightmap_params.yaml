@@ -1,0 +1,9 @@
+heightmap_node:
+  ros__parameters:
+    input: /filtered_elevation_map
+    output: /elevation_heightmap
+    layer: output
+    num_heightscans: 9
+    num_widthscans: 7
+    dist_x: 0.1
+    dist_y: 0.1

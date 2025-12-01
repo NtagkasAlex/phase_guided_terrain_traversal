@@ -1,0 +1,10 @@
+# Robosense_HDL-32
+# TODO
+/**:
+  ros__parameters:
+    sensor_processor:
+      type: laser
+      min_radius: 0.001745329
+      beam_angle: 0.0014
+      beam_constant: 0.0015 #Not found keepping the velodyne's one
+      

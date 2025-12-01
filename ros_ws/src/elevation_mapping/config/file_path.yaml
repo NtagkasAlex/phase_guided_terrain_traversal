@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    file_path: /media/baba/Data/internships/LS2N/intern/SourceCode/src/install/elevation_mapping/share/elevation_mapping/sample_data/maze.ply
+    topic: /point_cloud
+    frame_id: map

@@ -1,0 +1,21 @@
+grid_map_filters_node:
+  ros__parameters:
+    input_topic: "/elevation_map"
+    output_topic: "/filtered_elevation_map"
+    #filter_chain_parameter_name: "filters"
+    filters:
+      filter1:  # Fill holes in the map with inpainting.
+        name: median
+        type: gridMapFilters/MedianFillFilter
+        params:
+          input_layer: elevation
+          output_layer: output
+          fill_hole_radius: 0.5 # in m. 
+          filter_existing_values: false # Default is false. If enabled it also does a median computation for existing values. 
+          existing_value_radius: 0.2 # in m. Note that this option only has an effect if filter_existing_values is set true. 
+          fill_mask_layer: fill_mask # A layer that is used to compute which areas to fill. If not present in the input it is automatically computed. 
+          debug: false # If enabled, the additional debug_infill_mask_layer is published. 
+          num_erode_dilation_iterations: 4
+          #debug_infill_mask_layer: infill_mask # Layer used to visualize the intermediate, sparse-outlier removed fill mask. Only published if debug is enabled.
+
+      

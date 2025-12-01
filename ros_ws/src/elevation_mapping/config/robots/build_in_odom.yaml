@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    inputs: ['ground_truth_cloud']
+    ground_truth_cloud: # A name to identify the input source
+      type: pointcloud # Supported types: pointcloud
+      topic: /utlidar/cloud_deskewed
+      queue_size: 1
+      publish_on_update: true # Whether to publish the elevation map after a callback from this source.
+      sensor_processor:
+        type: laser
+    sensor_processor/ignore_points_above:       0.4
+    map_frame_id: "odom"
+    robot_base_frame_id: "odom"
+    robot_pose_with_covariance_topic: "/utlidar/robot_odom"
+    track_point_frame_id: "base_link"
+    track_point_x: 0.0
+    track_point_y: 0.0
+    track_point_z: 0.0

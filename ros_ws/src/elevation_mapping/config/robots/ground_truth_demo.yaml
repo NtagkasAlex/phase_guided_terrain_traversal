@@ -1,0 +1,39 @@
+/**:
+  ros__parameters:
+    inputs: ['ground_truth_cloud']
+    ground_truth_cloud: # A name to identify the input source
+      type: pointcloud # Supported types: pointcloud
+      topic: /cloud_registered
+      queue_size: 1
+      publish_on_update: true # Whether to publish the elevation map after a callback from this source.
+      sensor_processor:
+        type: laser
+        # min_radius: 0.018
+        # beam_angle: 0.0006
+        # beam_constant: 0.0015
+        # ignore_points_above:  0.
+        # ignore_points_below: -0.5
+    map_frame_id: "start"
+    robot_base_frame_id: "base_link"
+    robot_pose_with_covariance_topic: "/aft_mapped_to_init"
+    track_point_frame_id: "base_link"
+    track_point_x: 0.0
+    track_point_y: 0.0
+    track_point_z: 0.0
+    robot_pose_cache_size: 200
+    min_update_rate: 50.0
+    fused_map_publishing_rate: 100.0
+    relocate_rate: 50.0
+    increase_height_alpha: 0.95
+    min_variance: 0.000009
+    max_variance: 1000.0
+    scanning_duration: 10.0
+    mahalanobis_distance_threshold: 0.5
+    multi_height_noise: 0.0000009
+    # min_horizontal_variance: 0.0001
+    # max_horizontal_variance: 1.5
+
+    #enable_visibility_cleanup: false
+    #visibility_cleanup_rate: 20.0
+    #enable_continuous_cleanup: false    # i.e. cleanup at every scan
+

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>grid_map_filter_node</name>
+  <version>0.0.1</version>
+  <description>Grid map filter node with MedianFillFilter support</description>
+
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Use exec_depend for runtime and build dependencies -->
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>grid_map_ros</exec_depend>
+  <exec_depend>grid_map_filters</exec_depend>
+  <exec_depend>pluginlib</exec_depend>
+  <exec_depend>grid_map_msgs</exec_depend>
+  <depend>median_fill_filter</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

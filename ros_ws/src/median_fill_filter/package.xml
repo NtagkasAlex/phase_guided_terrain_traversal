@@ -1,0 +1,22 @@
+<package format="3">
+  <name>median_fill_filter</name>
+  <version>0.0.1</version>
+  <description>Median fill filter for grid maps</description>
+
+  <maintainer email="your.email@example.com">Your Name</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>pluginlib</depend>
+  <depend>grid_map_core</depend>
+  <depend>grid_map_cv</depend>
+  <depend>eigen3_cmake_module</depend>
+  <depend>opencv4</depend>
+
+  <export>
+    <pluginlib plugin="${prefix}/plugin_description.xml"/>
+  </export>
+</package>
+

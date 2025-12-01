@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>elevation_mapping</name>
+  <version>0.7.6</version>
+  <description>Generates an elevation map from distance measurements and robot pose information.</description>
+  <maintainer email="mwulf@anybotics.com">Maximilian Wulf</maintainer>
+  <maintainer email="mgaertner@anybotics.com">Magnus Gaertner</maintainer>
+  <license>BSD</license>
+  <url type="website">http://github.com/anybotics/elevation_mapping</url>
+  <url type="bugtracker">http://github.com/anybotics/elevation_mapping/issues</url>
+  <author email="pfankhauser@anybotics.com">Péter Fankhauser</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>boost</depend>
+  <depend>eigen</depend>
+  <depend>pcl</depend>
+  <!-- <depend>eigen_conversions</depend> probably not necessary -->
+  <depend>grid_map_core</depend>
+  <depend>grid_map_ros</depend>
+  <depend>grid_map_msgs</depend>
+  <depend>kindr</depend>
+  <depend>kindr_ros</depend>
+  <depend>message_filters</depend>
+  <depend>pcl_ros</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <!-- <test_depend>grid_map_filters</test_depend>
+  <test_depend>gtest</test_depend>
+  <test_depend>roslaunch</test_depend>
+  <test_depend>rostest</test_depend> -->
+
+<export>
+  <build_type>ament_cmake</build_type>
+
+</export>
+
+</package>
