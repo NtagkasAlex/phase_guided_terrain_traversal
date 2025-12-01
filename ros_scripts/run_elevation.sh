@@ -1,13 +1,12 @@
 #!/bin/bash
 
-cd ~/Desktop/phase_guided_terrain_traversal/ros_scripts
 ./run_point_lio.sh&
 LIO_PID=$!
 
 
 
-cd ~/Desktop/phase_guided_terrain_traversal/ros_ws
-colcon build --packages-select elevation_mapping grid_map_filter_node --cmake-args -DCMAKE_BUILD_TYPE=Release 
+cd ../ros_ws
+colcon build --packages-select elevation_mapping grid_map_filter_node #--cmake-args -DCMAKE_BUILD_TYPE=Release 
 source install/setup.bash
 # Wait for all processes to finish
 ros2 launch elevation_mapping elevationMapping_launch.py &

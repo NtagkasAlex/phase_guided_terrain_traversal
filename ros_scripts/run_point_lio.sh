@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cd ~/Desktop/phase_guided_terrain_traversal/ros_ws
-colcon build --packages-select point_lio
+cd ../ros_ws
+colcon build --packages-select point_lio transform_sensors
 source install/setup.bash
 ros2 run transform_sensors transform_everything &
 ros2 launch point_lio mapping_unilidar_l1.launch.py &
