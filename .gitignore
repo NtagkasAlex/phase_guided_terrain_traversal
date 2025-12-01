@@ -3,3 +3,7 @@ __pycache__/
 checks_stairs/
 plots/
 policy*
+log
+build
+install
+my_bag
