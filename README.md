@@ -3,7 +3,7 @@
 <img src="docs/img/real.jpg" alt="Example Gait" width="70%" />
 </p>
 
-A perceptive reinforcement learning locomotion framework developed for the Unitree GO2 in simulation (MuJoco MJX) and deployed using unitree sdk2py, on real hardware, using the Unitree L1 LiDAR.
+A perceptive reinforcement learning locomotion framework developed for the Unitree GO2 in simulation (MuJoco MJX). Deployed  on real hardware using unitree sdk2py for robot control and Point-Lio and Elevation Mapping for the perception pipeline, using the Unitree L1 LiDAR.
 <p align="center">
 <img src="docs/img/sim.jpg" alt="Example Gait" width="70%" />
 </p>
