@@ -9,7 +9,7 @@ for ((run=4; run<5; run++)); do
 
     INDEXES=($((OFFSET)) $((OFFSET+1)) $((OFFSET+2)) $((OFFSET+3)))
 
-    PGTT method
+    # PGTT method
     for i in "${INDEXES[@]}"; do
         rm -r "checks_stairs/checkpoint_$i"
     done
