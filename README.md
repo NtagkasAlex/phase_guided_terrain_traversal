@@ -99,7 +99,7 @@ chmod +x run_elevation.sh
 An rviz window should showup, showing the gridmap and the scandots.
 
 ## Citation
-
+```
 @misc{ntagkas2025pgttphaseguidedterraintraversal,
       title={PGTT: Phase-Guided Terrain Traversal for Perceptive Legged Locomotion}, 
       author={Alexandros Ntagkas and Chairi Kiourt and Konstantinos Chatzilygeroudis},
@@ -109,3 +109,4 @@ An rviz window should showup, showing the gridmap and the scandots.
       primaryClass={cs.RO},
       url={https://arxiv.org/abs/2510.18348}, 
 }
+```
