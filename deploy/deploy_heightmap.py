@@ -47,6 +47,7 @@ perturbation_mode = "fixed"
 
 perturbation_type="sinusoidal"
 perturbation_type = "constant" 
+pert_enable = False
 
 fixed_pert_velocity = 1. 
 fixed_pert_duration = 1.0
@@ -54,20 +55,20 @@ fixed_pert_wait = 1.0
 fixed_pert_angle = -0.4  
 
 command=np.array([0.6,0.4,0.])
-stairs_enabled=True
+stairs_enabled=False
 gait_freq=2.0
 ros_enabled=False
 render=True
 feet_scans=False
 
 mode="pgtt"
-filename="deploy/policies/pgtt"
+filename="policies/pgtt"
 
 # mode="baseline"
-# filename="deploy/policies/massloco"
+# filename="policies/massloco"
 
 # mode="wild"
-# filename="deploy/policies/wild"
+# filename="policies/wild"
 total_time=50
 
 
@@ -258,7 +259,7 @@ model.opt.timestep = sim_dt
 torso_body_id = model.body(consts.ROOT_BODY).id
 torso_mass = model.body_subtreemass[torso_body_id]
 
-pert_enable = True
+
 pert_velocity_range = [4., 5.0]
 pert_duration_range = [0.6, 1.8]
 pert_wait_range = [0.2, 2.0]

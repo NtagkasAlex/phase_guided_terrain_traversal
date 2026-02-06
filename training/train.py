@@ -226,7 +226,7 @@ def run_training(args,progress_fn):
     save_args = orbax_utils.save_args_from_target(params)
     path = ckpt_path / f"{current_step}"
     orbax_checkpointer.save(path, params, force=True, save_args=save_args)
-    model.save_params(f"policy{args.index}",params)
+    model.save_params(f"policies/policy_{args.index}",params)
 
 
     # print(list(metrics.keys()))
@@ -265,7 +265,7 @@ def run_training(args,progress_fn):
     )
   print(f"time to jit: {times[1] - times[0]}")
   print(f"time to train: {times[-1] - times[1]}")
-  model.save_params(f"policy{args.index}",params)
+  model.save_params(f"policies/policy_{args.index}",params)
   np.save(f"./plots/{args.method}/mean{args.index}",y_data)
   np.save(f"./plots/{args.method}/std{args.index}",y_dataerr)
   np.save(f"./plots/{args.method}/lin_vel{args.index}",linvels)
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     parser.add_argument('--terrain_file', type=str, default='terrains/level04.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')
     parser.add_argument('--num_envs', type=int, default=4096, help='Number of parallel environments')
-    parser.add_argument('--batch_size', type=int, default=4096, help='Batch size for PPO')
+    parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for PPO')
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
     parser.add_argument('--num_minibatches', type=int, default=8, help='Number of minibatches')
