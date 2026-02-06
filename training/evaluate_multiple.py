@@ -55,7 +55,7 @@ def sweep(method: str, ckpt_folder: str, ckpt_id: int, height_cm: int):
     num_timesteps=1,
     num_evals=1,
     num_eval_envs=1000,
-    index=0,
+    index="eval",
     eval_flag=True,
     )
     print(f"→ [{method}] ckpt {ckpt_id} running on {terrain} …", end="", flush=True)
@@ -79,24 +79,25 @@ def sweep_discrete(method: str, ckpt_folder: str):
         num_timesteps=1,
         num_evals=1,
         num_eval_envs=1000,
-        index=0,
-        eval_flag=True, 
+        index="eval",
+        eval_flag=True,
     )
     print(f"→ [{method}] running on {terrain} …", end="", flush=True)
     run_training(args,progress_eval)
     return copy.deepcopy(eval_metrics_all)
 def main():
 
+    METHODS = ["pgtt", "baseline", "wild"]
+    LEVELS = ["level03", "level07", "level10", "level13"]
+    RUN = 0  # which run to evaluate
+
     checkpoints = {
-    "pgtt": [ "checks_stairs/checkpoint_93", "checks_stairs/checkpoint_113", "checks_stairs/checkpoint_133","checks_stairs/checkpoint_153"],
-    "baseline": [ "checks_stairs/checkpoint_97", "checks_stairs/checkpoint_117", "checks_stairs/checkpoint_137","checks_stairs/checkpoint_157"],
-    "wild": [ "checks_stairs/checkpoint_101", "checks_stairs/checkpoint_121", "checks_stairs/checkpoint_141","checks_stairs/checkpoint_161"],
+        method: [
+            f"checks_stairs/checkpoint_{method}_{level}_run{RUN}"
+            for level in LEVELS
+        ]
+        for method in METHODS
     }
-    # checkpoints = {
-    # "pgtt": [ "checks_stairs/checkpoint_93", "checks_stairs/checkpoint_113", "checks_stairs/checkpoint_133"],
-    # "baseline": [ "checks_stairs/checkpoint_97", "checks_stairs/checkpoint_117", "checks_stairs/checkpoint_137"],
-    # "wild": [ "checks_stairs/checkpoint_101", "checks_stairs/checkpoint_121", "checks_stairs/checkpoint_141"],
-    # }
 
     Path("plots").mkdir(exist_ok=True)
 

@@ -297,7 +297,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_minibatches', type=int, default=8, help='Number of minibatches')
     parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
-    parser.add_argument('--index', type=int, default=42, help='Index to save checkpoints')
+    parser.add_argument('--index', type=str, default='0', help='Name/identifier for checkpoint saving')
     parser.add_argument('--num_eval_envs', type=int, default=128, help='Number of evaluation environments')
     parser.add_argument('--eval_flag', type=bool, default=False, help='True if you want to evaluate the model')
     args = parser.parse_args()
