@@ -1,0 +1,13 @@
+name: pgtt
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - cudatoolkit=11.8   
+  - pip:
+    - -r requirements.txt
