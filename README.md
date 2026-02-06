@@ -45,7 +45,7 @@ nvidia-smi
 ```
 
 ```bash
-pip install -U "jax[cuda_13]"
+pip install -U "jax[cuda13]"
 ```
 if cuda version is 13
 
