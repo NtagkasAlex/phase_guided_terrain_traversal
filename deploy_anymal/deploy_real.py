@@ -18,9 +18,9 @@ from unitree_sdk2py.utils.thread import RecurrentThread
 from unitree_sdk2py.comm.motion_switcher.motion_switcher_client import MotionSwitcherClient
 from unitree_sdk2py.go2.sport.sport_client import SportClient
 # import configs.unitree_legged_const as go2
-from deploy.common.rotation_helper import get_gravity_orientation, transform_imu_data
-from deploy.common.remote_controller import RemoteController, KeyMap
-import deploy.policy_net as pn
+from deploy_anymal.common.rotation_helper import get_gravity_orientation, transform_imu_data
+from deploy_anymal.common.remote_controller import RemoteController, KeyMap
+import deploy_anymal.policy_net as pn
 # from sensor_msgs_py import point_cloud2
 # from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
