@@ -11,6 +11,14 @@ TEST_SCENE_PATH ="./go2/xmls/terrain_test_mjx.xml"
 DATA_SCENE_PATH="./go2/xmls/data.xml"
 HUGE_STAIRS="./go2/xmls/huge_stairs.xml"
 
+
+# ROBOT = "anymal"
+# INPUT_SCENE_PATH = "./anymal/xmls/scene_mjx_feetonly.xml"
+# OUTPUT_SCENE_PATH ="./anymal/xmls/terrain_scene_mjx.xml"
+# TEST_SCENE_PATH ="./anymal/xmls/terrain_test_mjx.xml"
+# DATA_SCENE_PATH="./anymal/xmls/data.xml"
+# HUGE_STAIRS="./anymal/xmls/huge_stairs.xml"
+
 # INPUT_SCENE_PATH = "./terrain/scene.xml"
 # OUTPUT_SCENE_PATH ="./terrain/scene_terrain.xml"
 # TEST_SCENE_PATH ="./terrain/scene_test.xml"
