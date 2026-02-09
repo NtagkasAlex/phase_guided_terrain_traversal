@@ -7,14 +7,28 @@ import mujoco.viewer
 import numpy as np
 import matplotlib.pyplot as plt
 
-import go2.base as go2_base
-import go2.joystick_pgtt as joystick
-import go2.go2_constants as consts
+import robots
+import robots.base as robot_base
+import robots.gait as gait
+from functools import partial as _partial
 import policy_net as pn
 import torch
-from cpu_heightmap.heightmap import create_sensor_matrix
-import go2.gait as gait
+from cpu_heightmap.heightmap import create_sensor_matrix as _create_sensor_matrix_raw
 import copy
+import argparse
+
+_parser = argparse.ArgumentParser(description="Deploy heightmap")
+_parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+_args, _ = _parser.parse_known_args()
+robot_cfg = robots.get_robot_config(_args.robot)
+consts = robot_cfg
+create_sensor_matrix = _partial(
+    _create_sensor_matrix_raw,
+    dist_x=consts.dist_x,
+    dist_y=consts.dist_y,
+    num_heightscans=consts.num_heightscans,
+    num_widthscans=consts.num_widthscans,
+)
 
 try:
     import rclpy
@@ -46,29 +60,25 @@ perturbation_mode = "fixed"
 
 
 perturbation_type="sinusoidal"
-perturbation_type = "constant" 
-pert_enable = False
+perturbation_type = "constant"
 
-fixed_pert_velocity = 1. 
+fixed_pert_velocity = 1.
 fixed_pert_duration = 1.0
-fixed_pert_wait = 1.0    
-fixed_pert_angle = -0.4  
+fixed_pert_wait = 1.0
+fixed_pert_angle = -0.4
 
-command=np.array([0.6,0.4,0.])
-stairs_enabled=False
-gait_freq=2.0
+_deploy_defaults = robot_cfg.DEPLOY_DEFAULTS
+pert_enable = _deploy_defaults["pert_enable"]
+command=np.array(_deploy_defaults["command"])
+stairs_enabled=_deploy_defaults["stairs_enabled"]
+gait_freq=_deploy_defaults["gait_freq"]
 ros_enabled=False
 render=True
 feet_scans=False
 
 mode="pgtt"
-filename="policies/pgtt"
+filename=_deploy_defaults["policy_path"]
 
-# mode="baseline"
-# filename="policies/massloco"
-
-# mode="wild"
-# filename="policies/wild"
 total_time=50
 
 
@@ -119,7 +129,7 @@ class Controller:
 
         if ros_enabled and self._counter % self._n_substeps == 0:
             rclpy.spin_once(self.node)
-            self.command= self.node.get_velocity()*np.array([0.5,0.5,1.0])
+            self.command= self.node.get_velocity()*np.array(_deploy_defaults["ros_velocity_scale"])
        
         
         if mode=="baseline":
@@ -222,16 +232,16 @@ def draw_joystick_command(
         to=arrow_to,
     )      
 
-config_dict=joystick.default_config()
+config_dict=robot_cfg.default_config()
 if stairs_enabled:
     model = mujoco.MjModel.from_xml_path(
         consts.TEST_STAIRS_XML.as_posix(),
-        assets=go2_base.get_assets(),
+        assets=robot_base.get_assets(consts),
     )
 else:
     model = mujoco.MjModel.from_xml_path(
         consts.FEET_ONLY_FLAT_TERRAIN_XML.as_posix(),
-        assets=go2_base.get_assets(),
+        assets=robot_base.get_assets(consts),
     )
 
 model.dof_damping[6:] = config_dict.Kd
@@ -338,7 +348,7 @@ if render:
 start_time = time.time()
 
 
-from go2.gait import joint_gait
+from robots.gait import joint_gait
 trajectory=[]
 while data.time <total_time:#config_dict.episode_length*sim_dt:
     if pert_enable:

@@ -4,29 +4,25 @@ import jax
 import jax.numpy as jp
 from ml_collections import config_dict
 from mujoco import mjx
-from mujoco.mjx._src import math
 import numpy as np
 
-from mujoco_playground._src import collision
 from mujoco_playground._src import mjx_env
-import go2.base as go2_base
-import go2.go2_constants as consts
-import go2.gait as gait
-from go2.heightmap import create_sensor_matrix
+import robots.joystick_base as joystick_base
 
-from go2.configs import default_config,baseline_config
-
-import go2.joystick_base as joystick_base
 
 class Joystick(joystick_base.Joystick_Base):
-  """Track a joystick command."""
-  def __init__( 
+  """Baseline joystick variant (no phase/gait_freq in obs)."""
+  def __init__(
       self,
+      consts,
       task: str = "flat_terrain",
-      config: config_dict.ConfigDict = default_config(),
+      config: config_dict.ConfigDict = None,
       config_overrides: Optional[Dict[str, Union[str, int, list[Any]]]] = None,
   ):
+    if config is None:
+      config = consts.baseline_config()
     super().__init__(
+        consts=consts,
         task=task,
         config=config,
         config_overrides=config_overrides,
@@ -41,14 +37,8 @@ class Joystick(joystick_base.Joystick_Base):
     )
     state.info["motor_targets"] = motor_targets
 
-    # contact = jp.array([
-    #     collision.geoms_colliding(data, geom_id, self._floor_geom_id)
-    #     for geom_id in self._feet_geom_id
-    # ])
-
     contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
-    # print(contact)
-    
+
     contact_filt = contact | state.info["last_contact"]
     first_contact = (state.info["feet_air_time"] > 0.0) * contact_filt
     state.info["feet_air_time"] += self.dt
@@ -56,28 +46,25 @@ class Joystick(joystick_base.Joystick_Base):
     p_fz = p_f[..., -1]
     state.info["swing_peak"] = jp.maximum(state.info["swing_peak"], p_fz)
 
-    # heightscan=self.create_sensor_matrix(data,data.qpos[:3],self.get_yaw(data))
-    heightscan=create_sensor_matrix(self.mjx_model,data,data.qpos[:3],self.get_yaw(data))
-    # jax.debug.print("{}",heightscan[...,2])
-    n = (heightscan.shape[0] - 1) // 2  # This gives us the value of 'n' based on the shape of heightscan
-    # Extracting the four regions of the heightscan matrix
-    top_right = heightscan[:n, n+1:,2]          # Top-right corner
-    top_left = heightscan[:n, :n,2]             # Top-left corner
-    back_right = heightscan[n+1:, n+1:,2]       # Back-right corner
-    back_left = heightscan[n+1:, :n,2]         # Back-left corner
+    heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],self.get_yaw(data))
+    n = (heightscan.shape[0] - 1) // 2
+    top_right = heightscan[:n, n+1:,2]
+    top_left = heightscan[:n, :n,2]
+    back_right = heightscan[n+1:, n+1:,2]
+    back_left = heightscan[n+1:, :n,2]
 
     H_max_value = jp.array([
-      jp.max(top_right),   
-      jp.max(top_left),    
-      jp.max(back_right),  
-      jp.max(back_left)    
-    ]) 
+      jp.max(top_right),
+      jp.max(top_left),
+      jp.max(back_right),
+      jp.max(back_left)
+    ])
     H_min_value = jp.array([
-      jp.min(top_right),   
-      jp.min(top_left),    
-      jp.min(back_right),  
-      jp.min(back_left)    
-    ]) 
+      jp.min(top_right),
+      jp.min(top_left),
+      jp.min(back_right),
+      jp.min(back_left)
+    ])
     state.info["heightscan"]=heightscan
     state.info["H_max"]=H_max_value
     state.info["H_min"]=H_min_value
@@ -93,7 +80,6 @@ class Joystick(joystick_base.Joystick_Base):
         k: v * self._config.reward_config.scales[k] for k, v in rewards.items()
     }
     reward = jp.clip(sum(rewards.values()) * self.dt, 0.0, 10000.0)
-    # reward = sum(rewards.values()) * self.dt
 
     state.info["last_last_act"] = state.info["last_act"]
     state.info["last_act"] = action
@@ -122,11 +108,6 @@ class Joystick(joystick_base.Joystick_Base):
     done = done.astype(reward.dtype)
     state = state.replace(data=data, obs=obs, reward=reward, done=done)
     return state
-
-  def _get_termination(self, data: mjx.Data) -> jax.Array:
-    fall_termination = self.get_upvector(data)[-1] < 0.0
-    
-    return fall_termination
 
   def _get_obs(
       self, data: mjx.Data, info: dict[str, Any]
@@ -175,39 +156,18 @@ class Joystick(joystick_base.Joystick_Base):
         * self._config.noise_config.level
         * self._config.noise_config.scales.linvel
     )
-    # cos = jp.cos(info["phase"])
-    # sin = jp.sin(info["phase"])
-    # phase = jp.concatenate([cos, sin])
 
-    # gyro = self.get_gyro(data)
-    # gravity = self.get_gravity(data)
-    # joint_angles = data.qpos[7:]
-    # joint_vel = data.qvel[6:]
-    # linvel = self.get_local_linvel(data)
-    
-    cos = jp.cos(info["phase"])
-    sin = jp.sin(info["phase"])
-    phase = jp.concatenate([cos, sin])
-
-    # noisy_heightscan = (
-    #     info["heightscan"]
-    #     + (2 * jax.random.uniform(noise_rng, shape=info["heightscan"].shape) - 1)
-    #     * self._config.noise_config.level
-    #     * self._config.noise_config.scales.heightscan
-    # )       
-    # z_values = noisy_heightscan[..., 2].ravel()
     z_values = info["heightscan"][..., 2].ravel()
 
     mean = jp.mean(z_values)
     std = jp.std(z_values)
     z_normal=z_values-jp.min(z_values)
-    # z_normal = jp.where(std < 1e-8, jp.zeros_like(z_values), (z_values - mean) / std)   
     noisy_heightscan = (
       z_normal
       + (2 * jax.random.uniform(noise_rng, z_normal.shape) - 1)
       * self._config.noise_config.level
       * self._config.noise_config.scales.heightscan
-    )  
+    )
 
     should_update = (info["step"] % self._config.history_update_steps) == 0
 
@@ -227,7 +187,6 @@ class Joystick(joystick_base.Joystick_Base):
     info["qpos_error_history"] = qpos_error_history
 
     state = jp.hstack([
-        #noisy_linvel,  # 3
         noisy_gyro,  # 3
         noisy_gravity,  # 3
         noisy_joint_angles - self._default_pose,  # 12
@@ -244,13 +203,6 @@ class Joystick(joystick_base.Joystick_Base):
     privileged_state = jp.hstack([
         state,
         linvel,
-        # accelerometer,  # 3
-        # angvel,  # 3
-        # data.actuator_force,  # 12
-        # info["last_contact"],  # 4
-        # feet_vel,  # 4*3
-        # info["feet_air_time"],  # 4
-        # data.xfrc_applied[self._torso_body_id, :3],  # 3
     ])
 
     return {
@@ -289,7 +241,7 @@ class Joystick(joystick_base.Joystick_Base):
         "energy": self._cost_energy(data.qvel[6:], data.actuator_force),
         "feet_slip": self._cost_feet_slip(data, contact, info),
         "feet_clearance": self._cost_feet_clearance(data,info["H_max"]),
-     
+
         "feet_phase":self._reward_feet_phase(
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
         ),

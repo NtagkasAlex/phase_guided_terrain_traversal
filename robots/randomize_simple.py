@@ -4,9 +4,8 @@ from mujoco import mjx
 
 FLOOR_GEOM_ID = 0
 TORSO_BODY_ID = 1
-def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
-    bodies_ids=jnp.arange(14, 14+terrain_matrix.shape[1])
-    geoms_ids=jnp.arange(43, 43+terrain_matrix.shape[1])
+
+def domain_randomize(model: mjx.Model, rng: jax.Array):
     @jax.vmap
     def rand_dynamics(rng):
         # Floor friction: =U(0.4, 1.0).
@@ -14,10 +13,7 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
         geom_friction = model.geom_friction.at[FLOOR_GEOM_ID, 0].set(
             jax.random.uniform(key, minval=0.4, maxval=1.0)
         )
-        rng, key = jax.random.split(rng)
-        geom_friction = model.geom_friction.at[geoms_ids, 0].set(
-            jax.random.uniform(key,shape=(terrain_matrix.shape[1]) ,minval=0.4, maxval=1.0)
-        )
+
         # Scale static friction: *U(0.9, 1.1).
         rng, key = jax.random.split(rng)
         frictionloss = model.dof_frictionloss[6:] * jax.random.uniform(
@@ -60,14 +56,12 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
             qpos0[7:]
             + jax.random.uniform(key, shape=(12,), minval=-0.05, maxval=0.05)
         )
-
         rng, key = jax.random.split(rng)
         d_dof_damping = jax.random.uniform(
             key, shape=(12,), minval=0.9, maxval=1.1
         )
         dof_damping = model.dof_damping.at[6:].set(model.dof_damping[6:] * d_dof_damping)
-        
-        # Scale Kp and Kd 
+        # Scale Kp and Kd
         rng, key = jax.random.split(rng)
         d_actuator_gain = jax.random.uniform(
             key, shape=(12,), minval=0.9, maxval=1.1
@@ -75,21 +69,6 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
         actuator_gainprm = model.actuator_gainprm.at[:,0].set(model.actuator_gainprm[:,0] * d_actuator_gain)
 
         actuator_biasprm = model.actuator_biasprm.at[:,1].set(model.actuator_biasprm[:,1] * d_actuator_gain)
-
-        #     # Generate a random index\
-
-        batch_size = terrain_matrix.shape[0]
-        rng, key = jax.random.split(rng)
-        rand_idx = jax.random.randint(key,shape=(1), minval=0, maxval=batch_size)
-        
-        # Select a random batch matrix
-        object_matrix = terrain_matrix[rand_idx][0,:,:]
-        box_poses = model.body_pos.at[bodies_ids].set(object_matrix[:,:3]
-        )
-        box_quats = model.body_quat.at[bodies_ids].set(object_matrix[:,3:7]
-        )
-        box_sizes = model.geom_size.at[geoms_ids].set(object_matrix[:,7:]
-        )
 
         return (
             geom_friction,
@@ -101,9 +80,6 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
             dof_damping,
             actuator_gainprm,
             actuator_biasprm,
-            box_poses,
-            box_quats,
-            box_sizes
         )
 
     (
@@ -116,9 +92,7 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
         dof_damping,
         actuator_gainprm,
         actuator_biasprm,
-        box_poses,
-        box_quats,
-        box_sizes
+
     ) = rand_dynamics(rng)
 
     in_axes = jax.tree_util.tree_map(lambda x: None, model)
@@ -132,9 +106,6 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
         "dof_damping":0,
         "actuator_gainprm":0,
         "actuator_biasprm":0,
-        "body_pos":0,
-        "body_quat":0,
-        "geom_size":0
     })
 
     model = model.tree_replace({
@@ -147,10 +118,5 @@ def domain_randomize(model: mjx.Model, rng: jax.Array,terrain_matrix:jax.Array):
     "dof_damping":dof_damping,
     "actuator_gainprm":actuator_gainprm,
     "actuator_biasprm":actuator_biasprm,
-    "body_pos":box_poses,
-    "body_quat":box_quats,
-    "geom_size":box_sizes
     })
-
     return model, in_axes
-

@@ -44,7 +44,7 @@ except ImportError:
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 
-import go2.gait as gait
+import robots.gait as gait
 
 num_heightscans=13
 num_widthscans=9

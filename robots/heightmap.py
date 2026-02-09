@@ -4,11 +4,10 @@ from mujoco import mjx
 import jax
 import jax.numpy as jnp
 from functools import partial
-from anymal.anymal_constants import *
 
 
 @jax.jit
-def raycast_sensor(mjx_model,mjx_data, pos):
+def raycast_sensor(mjx_model, mjx_data, pos):
 
 	ray_sensor_site = jnp.array([pos[0], pos[1], pos[2]])
 	direction_vector = jnp.array([0, 0, -1.])
@@ -16,16 +15,20 @@ def raycast_sensor(mjx_model,mjx_data, pos):
 
 	f_ray=partial(mjx.ray,vec=direction_vector,
 				geomgroup=geomgroup_mask)
-	
+
 	z=f_ray(mjx_model,mjx_data,ray_sensor_site)
 	intersection_point = ray_sensor_site + direction_vector * z[0]
-	
+
 	return intersection_point
 
-@jax.jit
-def create_sensor_matrix(mx:mjx.Model,dx:mjx.Data,center, yaw=0., key=None, noise_range=0.005):
+
+def create_sensor_matrix(mx, dx, center, yaw=0., key=None, noise_range=0.005,
+                         *, dist_x, dist_y, num_heightscans, num_widthscans):
 		"""
-		This is the main function used to create the grid map using the ray sensor data
+		This is the main function used to create the grid map using the ray sensor data.
+
+		Parameters dist_x, dist_y, num_heightscans, num_widthscans are robot-specific
+		and must be passed as keyword arguments (typically via functools.partial).
 		"""
 
 		R_W2H = jnp.array([jnp.cos(yaw), jnp.sin(yaw), -jnp.sin(yaw), jnp.cos(yaw)])
@@ -47,7 +50,7 @@ def create_sensor_matrix(mx:mjx.Model,dx:mjx.Data,center, yaw=0., key=None, nois
 			noise = jax.random.uniform(subkey, shape=offsets.shape, minval=-noise_range, maxval=noise_range)
 			offsets = offsets + noise
 
-		offsets = offsets @ R_W2H  
+		offsets = offsets @ R_W2H
 
 		grid_positions = jnp.concatenate([
 			ref_robot[:2] + offsets,

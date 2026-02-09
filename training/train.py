@@ -51,10 +51,6 @@ import time
 from typing import Callable, List, NamedTuple, Optional, Union
 import numpy as np
 
-# import mediapy as media
-# import matplotlib.pyplot as plt
-
-
 # @title Import MuJoCo, MJX, and Brax
 from datetime import datetime
 import functools
@@ -75,11 +71,9 @@ from brax.training.agents.sac import train as sac
 from etils import epath
 from flax import struct
 from flax.training import orbax_utils
-# from IPython.display import HTML, clear_output
 import jax
 from jax import numpy as jp
 from matplotlib import pyplot as plt
-# import mediapy as media
 from ml_collections import config_dict
 import mujoco
 from mujoco import mjx
@@ -97,8 +91,9 @@ from mujoco_playground._src import registry
 
 from mujoco_playground import locomotion
 
-
-from go2.configs import *
+import robots
+from robots.randomize import domain_randomize
+from robots.randomize_simple import domain_randomize as domain_randomize_simple
 
 x_data, y_data, y_dataerr = [], [], []
 linvels=[]
@@ -109,7 +104,7 @@ times = [datetime.now()]
 def progress_training(num_steps, metrics,env_cfg):
   times.append(datetime.now())
   x_data.append(num_steps)
-  
+
   y_data.append(metrics["eval/episode_reward"])
   y_dataerr.append(metrics["eval/episode_reward_std"])
 
@@ -132,30 +127,30 @@ def progress_training(num_steps, metrics,env_cfg):
 
 
 def run_training(args,progress_fn):
+  robot_cfg = robots.get_robot_config(args.robot)
   task_name = args.task_name
   terrain_file = args.terrain_file
   checkpoint_folder = args.checkpoint_folder
-  if task_name=="stairs":
-    import go2.randomize as randomize
-  else:
-    import go2.randomize_simple as randomize
-  env_name = 'Go2'
+
+  env_name = robot_cfg.ROBOT_NAME
+
   if args.method=="pgtt":
-    import go2.joystick_pgtt as joystick
+    from robots.joystick_pgtt import Joystick
   elif args.method=="baseline":
-    import go2.joystick as joystick
+    from robots.joystick import Joystick
   elif args.method=="wild":
-    import go2.joystick_wild as joystick
-  env_call=functools.partial(joystick.Joystick,task=task_name)
-  locomotion.register_environment(env_name,env_call,joystick.default_config)
+    from robots.joystick_wild import Joystick
+
+  env_call=functools.partial(Joystick,consts=robot_cfg,task=task_name)
+  locomotion.register_environment(env_name,env_call,robot_cfg.default_config)
 
   env_cfg = registry.get_default_config(env_name)
   if args.method=="pgtt":
-    env_cfg=default_config()
+    env_cfg=robot_cfg.default_config()
   elif args.method=="baseline":
-    env_cfg=baseline_config()
+    env_cfg=robot_cfg.baseline_config()
   elif args.method=="wild":
-    env_cfg=wild_config()
+    env_cfg=robot_cfg.wild_config()
 
   if args.eval_flag:
       env_cfg.command_config.u_max=[0.7,0.7,0.7]
@@ -165,8 +160,7 @@ def run_training(args,progress_fn):
       env_cfg.command_config.u_max=[1.0,1.0,1.0]
       env_cfg.command_config.u_min=[-1.0,-1.0,-1.0]
 
-  
-  env_cfg.gait_freq=[1,3]
+  env_cfg.gait_freq=robot_cfg.TRAINING_DEFAULTS["gait_freq_override"]
   env = registry.load(env_name,config=env_cfg)
   print(env.mjx_model.nbody)
   print(env.action_size)
@@ -201,10 +195,18 @@ def run_training(args,progress_fn):
   ppo_params=rl_config
   if task_name=="stairs":
     matrix=jnp.load(args.terrain_file)
-    randomization=functools.partial(randomize.domain_randomize,terrain_matrix=matrix)
+    randomization=functools.partial(
+        domain_randomize,
+        terrain_matrix=matrix,
+        body_id_offset=robot_cfg.BODY_ID_OFFSET,
+        geom_id_offset=robot_cfg.GEOM_ID_OFFSET,
+    )
     locomotion._randomizer[env_name]=randomization
   else:
-    locomotion._randomizer[env_name]=randomize.domain_randomize
+    randomization=functools.partial(
+        domain_randomize_simple,
+    )
+    locomotion._randomizer[env_name]=randomization
 
 
 
@@ -229,7 +231,6 @@ def run_training(args,progress_fn):
     model.save_params(f"policies/policy_{args.index}",params)
 
 
-    # print(list(metrics.keys()))
   randomizer = registry.get_domain_randomizer(env_name)
 
   ppo_training_params = dict(ppo_params)
@@ -240,7 +241,6 @@ def run_training(args,progress_fn):
         ppo_networks.make_ppo_networks,
         **ppo_params.network_factory
     )
-  # print(ppo_training_params)
   train_fn = functools.partial(
       ppo.train, **dict(ppo_training_params),
       network_factory=network_factory,
@@ -255,7 +255,7 @@ def run_training(args,progress_fn):
         environment=env,
         eval_env=registry.load(env_name, config=env_cfg),
         wrap_env_fn=wrapper.wrap_for_brax_training,
-        restore_checkpoint_path=str(checkpoint_path),   
+        restore_checkpoint_path=str(checkpoint_path),
     )
   else:
     make_inference_fn, params, metrics = train_fn(
@@ -286,37 +286,31 @@ def get_max_numbered_folder(path):
     return max(number_folders) if number_folders else None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO with MuJoCo Playground")
-    parser.add_argument('--method', type=str, default='baseline', help='pgtt, baseline or wild ')
+    parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+    parser.add_argument('--method', type=str, default='pgtt', help='pgtt, baseline or wild')
     parser.add_argument('--task_name', type=str, default='stairs', help='Task name: stairs or flat_terrain')
     parser.add_argument('--terrain_file', type=str, default='terrains/level04.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')
-    parser.add_argument('--num_envs', type=int, default=4096, help='Number of parallel environments')
-    parser.add_argument('--batch_size', type=int, default=1024, help='Batch size for PPO')
+    parser.add_argument('--num_envs', type=int, default=None, help='Number of parallel environments (default: from robot config)')
+    parser.add_argument('--batch_size', type=int, default=None, help='Batch size for PPO (default: from robot config)')
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
-    parser.add_argument('--num_minibatches', type=int, default=8, help='Number of minibatches')
+    parser.add_argument('--num_minibatches', type=int, default=None, help='Number of minibatches (default: from robot config)')
     parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
     parser.add_argument('--index', type=str, default='0', help='Name/identifier for checkpoint saving')
     parser.add_argument('--num_eval_envs', type=int, default=128, help='Number of evaluation environments')
     parser.add_argument('--eval_flag', type=bool, default=False, help='True if you want to evaluate the model')
     args = parser.parse_args()
+
+    # Fill in defaults from robot config when not explicitly provided
+    robot_cfg = robots.get_robot_config(args.robot)
+    defaults = robot_cfg.TRAINING_DEFAULTS
+    if args.num_envs is None:
+        args.num_envs = defaults["num_envs"]
+    if args.batch_size is None:
+        args.batch_size = defaults["batch_size"]
+    if args.num_minibatches is None:
+        args.num_minibatches = defaults["num_minibatches"]
+
     run_training(args,progress_training)
-
-# for jupyter or whatever
-# from types import SimpleNamespace
-
-# args = SimpleNamespace(
-#     task_name='stairs',
-#     terrain_file='my_terrain.npy',
-#     checkpoint_folder=None,
-#     num_envs=1024,
-#     batch_size=128,
-#     discount=0.95,
-#     learning_rate=1e-4,
-#     num_minibatches=16,
-#     num_timesteps=2_000_000,
-#     num_evals=10,
-# )
-
-# run_training(args)

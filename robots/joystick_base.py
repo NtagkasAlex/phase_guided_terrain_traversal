@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional, Union
+import functools
 
 import jax
 import jax.numpy as jp
@@ -9,26 +10,36 @@ import numpy as np
 
 from mujoco_playground._src import collision
 from mujoco_playground._src import mjx_env
-import anymal.base as anymal_base
-import anymal.anymal_constants as consts
-import anymal.gait as gait
-from anymal.heightmap import create_sensor_matrix
+import robots.base as robot_base
+import robots.gait as gait
+from robots.heightmap import create_sensor_matrix as _create_sensor_matrix
 
-from anymal.configs import default_config
 
-class Joystick_Base(anymal_base.AnymalEnv):
+class Joystick_Base(robot_base.RobotEnv):
   """Track a joystick command."""
 
   def __init__(
       self,
+      consts,
       task: str = "flat_terrain",
-      config: config_dict.ConfigDict = default_config(),
+      config: config_dict.ConfigDict = None,
       config_overrides: Optional[Dict[str, Union[str, int, list[Any]]]] = None,
   ):
+    if config is None:
+      config = consts.default_config()
     super().__init__(
+        consts=consts,
         xml_path=consts.task_to_xml(task).as_posix(),
         config=config,
         config_overrides=config_overrides,
+    )
+    # Bind robot-specific heightmap parameters
+    self._heightmap_fn = functools.partial(
+        _create_sensor_matrix,
+        dist_x=consts.dist_x,
+        dist_y=consts.dist_y,
+        num_heightscans=consts.num_heightscans,
+        num_widthscans=consts.num_widthscans,
     )
 
   def reset(self, rng: jax.Array) -> mjx_env.State:
@@ -41,7 +52,6 @@ class Joystick_Base(anymal_base.AnymalEnv):
     qpos = qpos.at[0:2].set(qpos[0:2] + dxy)
     rng, key = jax.random.split(rng)
     yaw = jax.random.uniform(key, (1,), minval=-3.14, maxval=3.14)
-    # yaw = jax.random.uniform(key, (1,), minval=-0.2, maxval=0.2)
 
     quat = math.axis_angle_to_quat(jp.array([0, 0, 1]), yaw)
     new_quat = math.quat_mul(qpos[3:7], quat)
@@ -54,9 +64,9 @@ class Joystick_Base(anymal_base.AnymalEnv):
     )
 
     data = mjx_env.init(self.mjx_model, qpos=qpos, qvel=qvel, ctrl=qpos[7:])
-    
+
     #Use this if some envs start from stairs or level 1
-    heightscan=create_sensor_matrix(self.mjx_model,data,data.qpos[:3],0)
+    heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],0)
     qpos = qpos.at[2].set(qpos[2] +jp.max(heightscan[...,2]))
     data = data.replace(qpos=qpos)
     data = mjx.forward(self.mjx_model, data)
@@ -86,11 +96,11 @@ class Joystick_Base(anymal_base.AnymalEnv):
 
     rng, key1, key2 = jax.random.split(rng, 3)
     time_until_next_cmd = jax.random.exponential(key1) * 5.0
-    
+
     steps_until_next_cmd = jp.round(time_until_next_cmd / self.dt).astype(
         jp.int32
     )
-    
+
     cmd = jax.random.uniform(
         key2, shape=(3,), minval=self._cmd_u_min, maxval=self._cmd_u_max
     )
@@ -99,10 +109,9 @@ class Joystick_Base(anymal_base.AnymalEnv):
     gait_freq = jax.random.uniform(
         key,  minval=self._config.gait_freq[0], maxval=self._config.gait_freq[1]
     )
-    # heightscan=self.create_sensor_matrix(data,data.qpos[:3],0)
     qpos_error_history = jp.zeros(self._config.history_len * 12)
     qvel_history = jp.zeros(self._config.history_len * 12)
-    heightscan=create_sensor_matrix(self.mjx_model,data,data.qpos[:3],0)
+    heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],0)
     info = {
         "rng": rng,
         "command": cmd,
@@ -140,20 +149,11 @@ class Joystick_Base(anymal_base.AnymalEnv):
     obs = self._get_obs(data, info)
     reward, done = jp.zeros(2)
     self._weights=np.array([1.0,0.1,0.1]*4)
-    self.init_feet_pos.at[:].set(self.get_feet_pos(data))  
+    self.init_feet_pos.at[:].set(self.get_feet_pos(data))
     return mjx_env.State(data, obs, reward, done, metrics, info)
 
-  # def _reset_if_outside_bounds(self, state: mjx_env.State) -> mjx_env.State:
-  #   qpos = state.data.qpos
-  #   new_x = jp.where(jp.abs(qpos[0]) > 9.5, 0.0, qpos[0])
-  #   new_y = jp.where(jp.abs(qpos[1]) > 9.5, 0.0, qpos[1])
-  #   qpos = qpos.at[0:2].set(jp.array([new_x, new_y]))
-  #   state = state.replace(data=state.data.replace(qpos=qpos))
-  #   return state
-
   def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
-    
-    # state = self._reset_if_outside_bounds(state)
+
     if self._config.pert_config.enable:
       state = self._maybe_apply_perturbation(state)
     motor_targets = self._default_pose + action * self._config.action_scale
@@ -162,14 +162,8 @@ class Joystick_Base(anymal_base.AnymalEnv):
     )
     state.info["motor_targets"] = motor_targets
 
-    # contact = jp.array([
-    #     collision.geoms_colliding(data, geom_id, self._floor_geom_id)
-    #     for geom_id in self._feet_geom_id
-    # ])
-
     contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
-    # print(contact)
-    
+
     contact_filt = contact | state.info["last_contact"]
     first_contact = (state.info["feet_air_time"] > 0.0) * contact_filt
     state.info["feet_air_time"] += self.dt
@@ -177,28 +171,25 @@ class Joystick_Base(anymal_base.AnymalEnv):
     p_fz = p_f[..., -1]
     state.info["swing_peak"] = jp.maximum(state.info["swing_peak"], p_fz)
 
-    # heightscan=self.create_sensor_matrix(data,data.qpos[:3],self.get_yaw(data))
-    heightscan=create_sensor_matrix(self.mjx_model,data,data.qpos[:3],self.get_yaw(data))
-    # jax.debug.print("{}",heightscan[...,2])
-    n = (heightscan.shape[0] - 1) // 2  # This gives us the value of 'n' based on the shape of heightscan
-    # Extracting the four regions of the heightscan matrix
-    top_right = heightscan[:n, n+1:,2]          # Top-right corner
-    top_left = heightscan[:n, :n,2]             # Top-left corner
-    back_right = heightscan[n+1:, n+1:,2]       # Back-right corner
-    back_left = heightscan[n+1:, :n,2]         # Back-left corner
+    heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],self.get_yaw(data))
+    n = (heightscan.shape[0] - 1) // 2
+    top_right = heightscan[:n, n+1:,2]
+    top_left = heightscan[:n, :n,2]
+    back_right = heightscan[n+1:, n+1:,2]
+    back_left = heightscan[n+1:, :n,2]
 
     H_max_value = jp.array([
-      jp.max(top_right),   
-      jp.max(top_left),    
-      jp.max(back_right),  
-      jp.max(back_left)    
-    ]) 
+      jp.max(top_right),
+      jp.max(top_left),
+      jp.max(back_right),
+      jp.max(back_left)
+    ])
     H_min_value = jp.array([
-      jp.min(top_right),   
-      jp.min(top_left),    
-      jp.min(back_right),  
-      jp.min(back_left)    
-    ]) 
+      jp.min(top_right),
+      jp.min(top_left),
+      jp.min(back_right),
+      jp.min(back_left)
+    ])
     state.info["heightscan"]=heightscan
     state.info["H_max"]=H_max_value-H_min_value
     state.info["H_min"]=H_min_value
@@ -214,7 +205,6 @@ class Joystick_Base(anymal_base.AnymalEnv):
         k: v * self._config.reward_config.scales[k] for k, v in rewards.items()
     }
     reward = jp.clip(sum(rewards.values()) * self.dt, 0.0, 10000.0)
-    # reward = sum(rewards.values()) * self.dt
 
     state.info["last_last_act"] = state.info["last_act"]
     state.info["last_act"] = action
@@ -246,7 +236,7 @@ class Joystick_Base(anymal_base.AnymalEnv):
 
   def _get_termination(self, data: mjx.Data) -> jax.Array:
     fall_termination = self.get_upvector(data)[-1] < 0.0
-    
+
     return fall_termination
 
   def _get_obs(
@@ -296,39 +286,22 @@ class Joystick_Base(anymal_base.AnymalEnv):
         * self._config.noise_config.level
         * self._config.noise_config.scales.linvel
     )
-    # cos = jp.cos(info["phase"])
-    # sin = jp.sin(info["phase"])
-    # phase = jp.concatenate([cos, sin])
 
-    # gyro = self.get_gyro(data)
-    # gravity = self.get_gravity(data)
-    # joint_angles = data.qpos[7:]
-    # joint_vel = data.qvel[6:]
-    # linvel = self.get_local_linvel(data)
-    
     cos = jp.cos(info["phase"])
     sin = jp.sin(info["phase"])
     phase = jp.concatenate([cos, sin])
 
-    # noisy_heightscan = (
-    #     info["heightscan"]
-    #     + (2 * jax.random.uniform(noise_rng, shape=info["heightscan"].shape) - 1)
-    #     * self._config.noise_config.level
-    #     * self._config.noise_config.scales.heightscan
-    # )       
-    # z_values = noisy_heightscan[..., 2].ravel()
     z_values = info["heightscan"][..., 2].ravel()
 
     mean = jp.mean(z_values)
     std = jp.std(z_values)
     z_normal=z_values-jp.min(z_values)
-    # z_normal = jp.where(std < 1e-8, jp.zeros_like(z_values), (z_values - mean) / std)   
     noisy_heightscan = (
       z_normal
       + (2 * jax.random.uniform(noise_rng, z_normal.shape) - 1)
       * self._config.noise_config.level
       * self._config.noise_config.scales.heightscan
-    )  
+    )
 
     should_update = (info["step"] % self._config.history_update_steps) == 0
 
@@ -348,14 +321,11 @@ class Joystick_Base(anymal_base.AnymalEnv):
     info["qpos_error_history"] = qpos_error_history
 
     state = jp.hstack([
-        #noisy_linvel,  # 3
         noisy_gyro,  # 3
         noisy_gravity,  # 3
         noisy_joint_angles - self._default_pose,  # 12
         noisy_joint_vel,  # 12
         phase,# 8
-        # qvel_history,
-        # qpos_error_history,
         noisy_heightscan, #N^2
         info["gait_freq"],# 1
         info["last_act"],  # 12
@@ -369,13 +339,6 @@ class Joystick_Base(anymal_base.AnymalEnv):
     privileged_state = jp.hstack([
         state,
         linvel,
-        # accelerometer,  # 3
-        # angvel,  # 3
-        # data.actuator_force,  # 12
-        # info["last_contact"],  # 4
-        # feet_vel,  # 4*3
-        # info["feet_air_time"],  # 4
-        # data.xfrc_applied[self._torso_body_id, :3],  # 3
     ])
 
     return {
@@ -414,7 +377,7 @@ class Joystick_Base(anymal_base.AnymalEnv):
         "energy": self._cost_energy(data.qvel[6:], data.actuator_force),
         "feet_slip": self._cost_feet_slip(data, contact, info),
         "feet_clearance": self._cost_feet_clearance(data,info["H_max"]),
-     
+
         "feet_phase":self._reward_feet_phase(
             data, info["phase"],info["H_max"]+self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance
         ),
@@ -436,16 +399,16 @@ class Joystick_Base(anymal_base.AnymalEnv):
     feet_pos=self.get_feet_pos(data)
     weight=jp.array([1.,1.,0.])
     return jp.sum(jp.square(feet_pos-init)*weight)
-  
+
   def _reward_body_height(self,data,info):
       body_height=data.qpos[2]
       heightscan=info["heightscan"]
       center_heightscan=heightscan[heightscan.shape[0]//2,heightscan.shape[1]//2,2]
       return jp.sum((body_height-center_heightscan-self._config.reward_config.base_feet_distance)**2)
   def _reward_contact(self,phase,contact):
-      x = phase / (2 * jp.pi)                        
-      stance_mask = x < gait.p_stance 
-      swing_mask = x >= gait.p_stance 
+      x = phase / (2 * jp.pi)
+      stance_mask = x < gait.p_stance
+      swing_mask = x >= gait.p_stance
 
 
       reward_mask = stance_mask & contact
@@ -456,13 +419,13 @@ class Joystick_Base(anymal_base.AnymalEnv):
 
       reward = - jp.sum(penalty_terms)
       return reward
-  
+
   def _reward_swing(
     self, data: mjx.Data, phase: jax.Array, p_des: jax.Array,H_max
     ) -> jax.Array:
-        foot_pos_local=self.get_feet_pos(data)  
-        foot_z_local=foot_pos_local[...,-1]               
-        x = phase / (2 * jp.pi)                        
+        foot_pos_local=self.get_feet_pos(data)
+        foot_z_local=foot_pos_local[...,-1]
+        x = phase / (2 * jp.pi)
 
         swing_mask = x >= gait.p_stance  # swing phase
         reward_mask=jp.where(swing_mask,1.0,0.0)
@@ -472,17 +435,10 @@ class Joystick_Base(anymal_base.AnymalEnv):
   def _reward_feet_phase(
       self, data: mjx.Data, phase: jax.Array, swing_height: jax.Array,swing_min:jax.Array
   ) -> jax.Array:
-    
-    # foot_pos = data.site_xpos[self._feet_site_id]
-    # foot_z = foot_pos[..., -1]
-    foot_pos_local=self.get_feet_pos(data)  
-    foot_z_local=foot_pos_local[...,-1]  
-    # height=jp.minimum(swing_height,-0.1)
-    rz = gait.get_z(phase, swing_height=swing_height,swing_min=swing_min)
-    # x = phase / (2 * jp.pi)                        
 
-    # swing_mask = x >= gait.p_stance  # swing phase
-    # rz = jp.where(swing_mask, swing_height,swing_min)
+    foot_pos_local=self.get_feet_pos(data)
+    foot_z_local=foot_pos_local[...,-1]
+    rz = gait.get_z(phase, swing_height=swing_height,swing_min=swing_min)
     error = jp.sum(jp.square(foot_z_local - rz))
     return jp.exp(-error /  self._config.reward_config.phase_sigma)
 
@@ -505,7 +461,7 @@ class Joystick_Base(anymal_base.AnymalEnv):
     return jp.exp(-ang_vel_error / self._config.reward_config.tracking_sigma)
 
   # Base-related rewards.
-  
+
   def _cost_lin_vel_z(self, global_linvel) -> jax.Array:
     # Penalize z axis base linear velocity.
     return jp.square(global_linvel[2])
@@ -541,8 +497,6 @@ class Joystick_Base(anymal_base.AnymalEnv):
   def _reward_pose(self, qpos: jax.Array) -> jax.Array:
     # Stay close to the default pose.
     return jp.sum(jp.square(qpos - self._default_pose) * self._weights)
-    # weight = jp.array([1.0, 0.1, 0.1] * 4)
-    # return jp.exp(-jp.sum(jp.square(qpos - self._default_pose) * weight))
 
   def _cost_stand_still(
       self,
@@ -577,10 +531,10 @@ class Joystick_Base(anymal_base.AnymalEnv):
     feet_vel = data.sensordata[self._foot_linvel_sensor_adr]
     vel_xy = feet_vel[..., :2]
     vel_norm = jp.sqrt(jp.linalg.norm(vel_xy, axis=-1))
-    foot_pos_local=self.get_feet_pos(data)  
-    foot_z_local=foot_pos_local[...,-1]  
+    foot_pos_local=self.get_feet_pos(data)
+    foot_z_local=foot_pos_local[...,-1]
     delta = jp.abs(foot_z_local - (H_max+self._config.reward_config.swing_height))
-    
+
     return jp.sum(delta * vel_norm)
 
   def _cost_feet_height(
@@ -669,7 +623,7 @@ class Joystick_Base(anymal_base.AnymalEnv):
         state,
     )
 
- 
+
   def sample_command(self, rng: jax.Array, x_k: jax.Array) -> jax.Array:
     rng, y_rng, w_rng, z_rng = jax.random.split(rng, 4)
     y_k = jax.random.uniform(
@@ -679,4 +633,3 @@ class Joystick_Base(anymal_base.AnymalEnv):
     w_k = jax.random.bernoulli(w_rng, 0.5, shape=(3,))
     x_kp1 = x_k - w_k * (x_k - y_k * z_k)
     return x_kp1
-

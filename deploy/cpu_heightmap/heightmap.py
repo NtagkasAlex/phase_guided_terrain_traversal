@@ -1,8 +1,6 @@
 import mujoco
 import numpy as np
 from functools import partial
-from go2.go2_constants import *
-
 def raycast_sensor(model, data, pos):
     ray_sensor_site = np.array([pos[0], pos[1], pos[2]])
     direction_vector = np.array([0, 0, -1.])
@@ -19,7 +17,8 @@ def raycast_sensor(model, data, pos):
 
 
     return intersection_point#-(data.qpos[2]-0.28)
-def create_sensor_matrix(model, data, center, yaw=0.,noise_xy=0.00,noise_z=0.0):
+def create_sensor_matrix(model, data, center, yaw=0.,noise_xy=0.00,noise_z=0.0,
+                         *, dist_x, dist_y, num_heightscans, num_widthscans):
     """
     This function creates the grid map using ray sensor data.
     

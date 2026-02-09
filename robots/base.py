@@ -11,34 +11,33 @@ from mujoco_playground._src import mjx_env
 from mujoco.mjx._src import math
 from mujoco_playground._src import collision
 
-from go2.utility import quat_to_yaw
-import go2.go2_constants as consts
+from robots.utility import quat_to_yaw
 from scipy.spatial.transform import Rotation
 from functools import partial
 
-def get_assets() -> Dict[str, bytes]:
+def get_assets(consts) -> Dict[str, bytes]:
   assets = {}
   mjx_env.update_assets(assets, consts.ROOT_PATH / "xmls", "*.xml")
   mjx_env.update_assets(assets, consts.ROOT_PATH / "xmls" / "assets")
-
   return assets
 
 
-class Go2Env(mjx_env.MjxEnv):
-  """Base class for Go2 environments."""
+class RobotEnv(mjx_env.MjxEnv):
+  """Base class for quadruped robot environments. Parameterized by a constants module."""
 
   def __init__(
       self,
+      consts,
       xml_path: str,
       config: config_dict.ConfigDict,
       config_overrides: Optional[Dict[str, Union[str, int, list[Any]]]] = None,
   ) -> None:
     super().__init__(config, config_overrides)
-    # print(consts.ROOT_PATH)
+    self._consts = consts
     self._mj_model = mujoco.MjModel.from_xml_string(
-        epath.Path(xml_path).read_text(), assets=get_assets()
+        epath.Path(xml_path).read_text(), assets=get_assets(consts)
     )
-    
+
     self._mj_model.opt.timestep = self._config.sim_dt
 
     # Modify PD gains.
@@ -59,7 +58,7 @@ class Go2Env(mjx_env.MjxEnv):
     self.init_feet_pos=jp.zeros((4,3))
     # Note: First joint is freejoint.
     self._lowers, self._uppers = self.mj_model.jnt_range[1:].T
-    
+
     self._soft_lowers = self._lowers * self._config.soft_joint_pos_limit_factor
     self._soft_uppers = self._uppers * self._config.soft_joint_pos_limit_factor
 
@@ -70,12 +69,10 @@ class Go2Env(mjx_env.MjxEnv):
         [self._mj_model.site(name).id for name in consts.FEET_SITES]
     )
     self._floor_geom_id = jp.array([self._mj_model.geom("floor").id])
-    
+
     for i in range(self._mj_model.nbody):
-      body_name = mujoco.mj_id2name(self._mj_model, mujoco.mjtObj.mjOBJ_BODY, i)  # Get body name
+      body_name = mujoco.mj_id2name(self._mj_model, mujoco.mjtObj.mjOBJ_BODY, i)
       if body_name and body_name.startswith("box_"):
-      # print(body_name)
-        
         self._floor_geom_id=jp.hstack([self._floor_geom_id,self._mj_model.body_geomadr[i]])
 
     self._feet_geom_id = jp.array(
@@ -99,38 +96,38 @@ class Go2Env(mjx_env.MjxEnv):
   # Sensor readings.
 
   def get_upvector(self, data: mjx.Data) -> jax.Array:
-    return mjx_env.get_sensor_data(self.mj_model, data, consts.UPVECTOR_SENSOR)
+    return mjx_env.get_sensor_data(self.mj_model, data, self._consts.UPVECTOR_SENSOR)
 
   def get_gravity(self, data: mjx.Data) -> jax.Array:
     return data.site_xmat[self._imu_site_id].T @ jp.array([0, 0, -1])
 
   def get_global_linvel(self, data: mjx.Data) -> jax.Array:
     return mjx_env.get_sensor_data(
-        self.mj_model, data, consts.GLOBAL_LINVEL_SENSOR
+        self.mj_model, data, self._consts.GLOBAL_LINVEL_SENSOR
     )
 
   def get_global_angvel(self, data: mjx.Data) -> jax.Array:
     return mjx_env.get_sensor_data(
-        self.mj_model, data, consts.GLOBAL_ANGVEL_SENSOR
+        self.mj_model, data, self._consts.GLOBAL_ANGVEL_SENSOR
     )
 
   def get_local_linvel(self, data: mjx.Data) -> jax.Array:
     return mjx_env.get_sensor_data(
-        self.mj_model, data, consts.LOCAL_LINVEL_SENSOR
+        self.mj_model, data, self._consts.LOCAL_LINVEL_SENSOR
     )
 
   def get_accelerometer(self, data: mjx.Data) -> jax.Array:
     return mjx_env.get_sensor_data(
-        self.mj_model, data, consts.ACCELEROMETER_SENSOR
+        self.mj_model, data, self._consts.ACCELEROMETER_SENSOR
     )
 
   def get_gyro(self, data: mjx.Data) -> jax.Array:
-    return mjx_env.get_sensor_data(self.mj_model, data, consts.GYRO_SENSOR)
+    return mjx_env.get_sensor_data(self.mj_model, data, self._consts.GYRO_SENSOR)
 
   def get_feet_pos(self, data: mjx.Data) -> jax.Array:
     return jp.vstack([
         mjx_env.get_sensor_data(self.mj_model, data, sensor_name)
-        for sensor_name in consts.FEET_POS_SENSOR
+        for sensor_name in self._consts.FEET_POS_SENSOR
     ])
   def get_yaw(self,data:mjx.Data):
     quat=data.qpos[3:7]
@@ -138,65 +135,22 @@ class Go2Env(mjx_env.MjxEnv):
   @staticmethod
   def compute_contact(data, feet_geom_ids, floor_geom_ids):
     """Check if each foot geom collides with any floor geom efficiently using JAX."""
-    
+
     # Define the function to check collision for a single foot and a single floor
     def check_collision(foot_geom_id, floor_geom_id):
         return collision.geoms_colliding(data, foot_geom_id, floor_geom_id)
-    
+
     # Vectorize over both feet and floor geoms (result shape: (num_feet, num_floors))
     check_collision_vmap = jax.vmap(
         jax.vmap(check_collision, in_axes=(None, 0)),  # Vectorize floor geoms for each foot geom
         in_axes=(0, None)  # Vectorize over feet geoms
     )
-    
+
     # Compute collisions (final shape: (num_feet, num_floors))
     collision_matrix = check_collision_vmap(feet_geom_ids, floor_geom_ids)
-    
+
     # Return a vector indicating if there is any collision for each foot (shape: (num_feet,))
     return jp.any(collision_matrix, axis=-1)
-  # def raycast_sensor(self,mjx_data, pos):
-
-  #   ray_sensor_site = jp.array([pos[0], pos[1], pos[2]])
-  #   direction_vector = jp.array([0, 0, -1.])
-  #   geomgroup_mask=(1,0,0,0,1,1)
-
-  #   f_ray=partial(mjx.ray,vec=direction_vector,
-  #         geomgroup=geomgroup_mask)
-    
-  #   z=f_ray(self.mjx_model,mjx_data,ray_sensor_site)
-  #   intersection_point = ray_sensor_site + direction_vector * z[0]
-    
-  #   return intersection_point
-
-  # def create_sensor_matrix(self,dx:mjx.Data,center, yaw=0.):
-  #     """
-  #     This is the main function used to create the grid map using the ray sensor data
-  #     """
-
-  #     R_W2H = jp.array([jp.cos(yaw), jp.sin(yaw), -jp.sin(yaw), jp.cos(yaw)])
-  #     R_W2H = R_W2H.reshape((2, 2))
-
-  #     c = int((consts.num_heightscans - 1) / 2)
-
-  #     ref_robot = jp.array([center[0], center[1], center[2] + 0.6])
-
-  #     idx = jp.arange(consts.num_heightscans)
-  #     p, k = jp.meshgrid(idx - c, idx - c, indexing="ij")
-
-  #     offsets = jp.stack([p * consts.dist_x, k * consts.dist_y], axis=-1)  # (N, N, 2)
-  #     offsets = offsets @ R_W2H
-
-  #     grid_positions = jp.concatenate([
-  #       ref_robot[:2] + offsets,
-  #       jp.full((consts.num_heightscans, consts.num_heightscans, 1), ref_robot[2])  
-  #     ], axis=-1)
-
-  #     sensor_matrix = grid_positions.at[c, c].set(ref_robot) #(N,N,3)
-
-      
-  #     get_data=jax.vmap(jax.vmap(self.raycast_sensor,in_axes=(None,0)),in_axes=(None,0))(dx,sensor_matrix)
-
-  #     return get_data
 
   # Accessors.
   @property

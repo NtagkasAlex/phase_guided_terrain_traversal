@@ -4,24 +4,25 @@ import cv2
 import noise
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import argparse as _argparse
+
+def _get_robot_paths(robot_name="go2"):
+    return {
+        "input": f"./{robot_name}/xmls/scene_mjx_feetonly.xml",
+        "output": f"./{robot_name}/xmls/terrain_scene_mjx.xml",
+        "test": f"./{robot_name}/xmls/terrain_test_mjx.xml",
+        "data": f"./{robot_name}/xmls/data.xml",
+        "huge_stairs": f"./{robot_name}/xmls/huge_stairs.xml",
+    }
+
+# Default (overridden by --robot flag in __main__)
 ROBOT = "go2"
-INPUT_SCENE_PATH = "./go2/xmls/scene_mjx_feetonly.xml"
-OUTPUT_SCENE_PATH ="./go2/xmls/terrain_scene_mjx.xml"
-TEST_SCENE_PATH ="./go2/xmls/terrain_test_mjx.xml"
-DATA_SCENE_PATH="./go2/xmls/data.xml"
-HUGE_STAIRS="./go2/xmls/huge_stairs.xml"
-
-
-# ROBOT = "anymal"
-# INPUT_SCENE_PATH = "./anymal/xmls/scene_mjx_feetonly.xml"
-# OUTPUT_SCENE_PATH ="./anymal/xmls/terrain_scene_mjx.xml"
-# TEST_SCENE_PATH ="./anymal/xmls/terrain_test_mjx.xml"
-# DATA_SCENE_PATH="./anymal/xmls/data.xml"
-# HUGE_STAIRS="./anymal/xmls/huge_stairs.xml"
-
-# INPUT_SCENE_PATH = "./terrain/scene.xml"
-# OUTPUT_SCENE_PATH ="./terrain/scene_terrain.xml"
-# TEST_SCENE_PATH ="./terrain/scene_test.xml"
+_paths = _get_robot_paths(ROBOT)
+INPUT_SCENE_PATH = _paths["input"]
+OUTPUT_SCENE_PATH = _paths["output"]
+TEST_SCENE_PATH = _paths["test"]
+DATA_SCENE_PATH = _paths["data"]
+HUGE_STAIRS = _paths["huge_stairs"]
 
 # zyx euler angle to quaternion
 def euler_to_quat(roll, pitch, yaw):
@@ -447,6 +448,16 @@ def random_test_env(num_bodies,size):
     tg.Save(TEST_SCENE_PATH)
     
 if __name__ == "__main__":
+    _parser = _argparse.ArgumentParser(description="Terrain Generator")
+    _parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+    _args, _remaining = _parser.parse_known_args()
+    ROBOT = _args.robot
+    _paths = _get_robot_paths(ROBOT)
+    INPUT_SCENE_PATH = _paths["input"]
+    OUTPUT_SCENE_PATH = _paths["output"]
+    TEST_SCENE_PATH = _paths["test"]
+    DATA_SCENE_PATH = _paths["data"]
+    HUGE_STAIRS = _paths["huge_stairs"]
 
     size=9
     length=None
