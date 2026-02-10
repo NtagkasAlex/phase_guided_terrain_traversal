@@ -46,7 +46,7 @@ num_heightscans = 11
 num_widthscans = 9
 
 # ---- Randomization parameters ----
-GEOM_ID_OFFSET = 57
+GEOM_ID_OFFSET = 43
 BODY_ID_OFFSET = 14
 
 # ---- Training defaults ----
