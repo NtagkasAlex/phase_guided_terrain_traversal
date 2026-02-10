@@ -51,7 +51,7 @@ BODY_ID_OFFSET = 14
 
 # ---- Training defaults ----
 TRAINING_DEFAULTS = dict(
-    num_envs=8092,
+    num_envs=8192,
     batch_size=1024,
     num_minibatches=16,
     gait_freq_override=[1, 3],
