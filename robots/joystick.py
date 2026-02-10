@@ -37,7 +37,12 @@ class Joystick(joystick_base.Joystick_Base):
     )
     state.info["motor_targets"] = motor_targets
 
-    contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
+    # contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
+
+    contact = jp.array([
+        data.sensordata[self.mjx_model.sensor_adr[sensorid]] > 0
+        for sensorid in self._feet_floor_found_sensor
+    ])
 
     contact_filt = contact | state.info["last_contact"]
     first_contact = (state.info["feet_air_time"] > 0.0) * contact_filt

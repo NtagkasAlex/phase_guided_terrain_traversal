@@ -8,7 +8,7 @@ from mujoco import mjx
 from mujoco.mjx._src import math
 import numpy as np
 
-from mujoco_playground._src import collision
+# from mujoco_playground._src import collision
 from mujoco_playground._src import mjx_env
 import robots.base as robot_base
 import robots.gait as gait
@@ -63,7 +63,15 @@ class Joystick_Base(robot_base.RobotEnv):
         jax.random.uniform(key, (6,), minval=-0.1, maxval=0.1)
     )
 
-    data = mjx_env.init(self.mjx_model, qpos=qpos, qvel=qvel, ctrl=qpos[7:])
+    data = mjx_env.make_data(
+        self.mjx_model,
+        qpos=qpos,
+        qvel=qvel,
+        ctrl=qpos[7:],
+        impl=self.mjx_model.impl.value,
+        nconmax=self._config.nconmax,
+        njmax=self._config.njmax,
+    )
 
     #Use this if some envs start from stairs or level 1
     heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],0)
@@ -162,7 +170,11 @@ class Joystick_Base(robot_base.RobotEnv):
     )
     state.info["motor_targets"] = motor_targets
 
-    contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
+    # contact = self.compute_contact(data,self._feet_geom_id, self._floor_geom_id)
+    contact = jp.array([
+        data.sensordata[self.mjx_model.sensor_adr[sensorid]] > 0
+        for sensorid in self._feet_floor_found_sensor
+    ])
 
     contact_filt = contact | state.info["last_contact"]
     first_contact = (state.info["feet_air_time"] > 0.0) * contact_filt

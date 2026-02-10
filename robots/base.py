@@ -9,7 +9,7 @@ from mujoco import mjx
 
 from mujoco_playground._src import mjx_env
 from mujoco.mjx._src import math
-from mujoco_playground._src import collision
+# from mujoco_playground._src import collision
 
 from robots.utility import quat_to_yaw
 from scipy.spatial.transform import Rotation
@@ -79,6 +79,11 @@ class RobotEnv(mjx_env.MjxEnv):
         [self._mj_model.geom(name).id for name in consts.FEET_GEOMS]
     )
 
+    self._feet_floor_found_sensor = [
+        self._mj_model.sensor(f"{geom}_floor_found").id
+        for geom in consts.FEET_GEOMS
+    ]
+
     foot_linvel_sensor_adr = []
     for site in consts.FEET_SITES:
       sensor_id = self._mj_model.sensor(f"{site}_global_linvel").id
@@ -132,25 +137,25 @@ class RobotEnv(mjx_env.MjxEnv):
   def get_yaw(self,data:mjx.Data):
     quat=data.qpos[3:7]
     return quat_to_yaw(quat)
-  @staticmethod
-  def compute_contact(data, feet_geom_ids, floor_geom_ids):
-    """Check if each foot geom collides with any floor geom efficiently using JAX."""
+  # @staticmethod
+  # def compute_contact(data, feet_geom_ids, floor_geom_ids):
+  #   """Check if each foot geom collides with any floor geom efficiently using JAX."""
 
-    # Define the function to check collision for a single foot and a single floor
-    def check_collision(foot_geom_id, floor_geom_id):
-        return collision.geoms_colliding(data, foot_geom_id, floor_geom_id)
+  #   # Define the function to check collision for a single foot and a single floor
+  #   def check_collision(foot_geom_id, floor_geom_id):
+  #       return collision.geoms_colliding(data, foot_geom_id, floor_geom_id)
 
-    # Vectorize over both feet and floor geoms (result shape: (num_feet, num_floors))
-    check_collision_vmap = jax.vmap(
-        jax.vmap(check_collision, in_axes=(None, 0)),  # Vectorize floor geoms for each foot geom
-        in_axes=(0, None)  # Vectorize over feet geoms
-    )
+  #   # Vectorize over both feet and floor geoms (result shape: (num_feet, num_floors))
+  #   check_collision_vmap = jax.vmap(
+  #       jax.vmap(check_collision, in_axes=(None, 0)),  # Vectorize floor geoms for each foot geom
+  #       in_axes=(0, None)  # Vectorize over feet geoms
+  #   )
 
-    # Compute collisions (final shape: (num_feet, num_floors))
-    collision_matrix = check_collision_vmap(feet_geom_ids, floor_geom_ids)
+  #   # Compute collisions (final shape: (num_feet, num_floors))
+  #   collision_matrix = check_collision_vmap(feet_geom_ids, floor_geom_ids)
 
-    # Return a vector indicating if there is any collision for each foot (shape: (num_feet,))
-    return jp.any(collision_matrix, axis=-1)
+  #   # Return a vector indicating if there is any collision for each foot (shape: (num_feet,))
+  #   return jp.any(collision_matrix, axis=-1)
 
   # Accessors.
   @property
