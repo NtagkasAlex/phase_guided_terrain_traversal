@@ -72,6 +72,7 @@ class Joystick_Base(robot_base.RobotEnv):
         nconmax=self._config.nconmax,
         njmax=self._config.njmax,
     )
+    data = mjx.forward(self.mjx_model, data)
 
     #Use this if some envs start from stairs or level 1
     heightscan=self._heightmap_fn(self.mjx_model,data,data.qpos[:3],0)

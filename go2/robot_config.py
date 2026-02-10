@@ -51,8 +51,8 @@ BODY_ID_OFFSET = 14
 
 # ---- Training defaults ----
 TRAINING_DEFAULTS = dict(
-    num_envs=1024,
-    batch_size=256,
+    num_envs=8092,
+    batch_size=1024,
     num_minibatches=16,
     gait_freq_override=[1, 3],
 )
@@ -73,9 +73,9 @@ _global_velocity_kick = [0.5, 2]
 _global_kick_durations = [0.3, 1.8]
 _global_kick_wait_times = [0.2, 2.0]
 
-IMPL="jax"#"warp or "jax"
-NCONMAX = 16*512 * TRAINING_DEFAULTS["num_envs"]
-NJMAX = 16*1024
+IMPL="warp"#"warp or "jax"
+NCONMAX = 4* TRAINING_DEFAULTS["num_envs"]
+NJMAX = 40
 # NCONMAX = 4* TRAINING_DEFAULTS["num_envs"]
 # NJMAX = 40
 
