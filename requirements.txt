@@ -1,7 +1,7 @@
-mujoco==3.3.7
-mujoco-mjx==3.3.7
+mujoco
+mujoco-mjx
 brax==0.13.0
-playground==0.0.4
+playground
 numpy
 matplotlib
 etils
@@ -16,3 +16,4 @@ pillow
 absl-py
 pyyaml
 typing-extensions
+mujoco-warp

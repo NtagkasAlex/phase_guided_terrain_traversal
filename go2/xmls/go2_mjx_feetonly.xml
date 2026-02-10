@@ -273,7 +273,15 @@
     <framelinvel objtype="site" objname="RR_foot" name="RR_foot_global_linvel"/>
     <framelinvel objtype="site" objname="RL_foot" name="RL_foot_global_linvel"/>
 
+
+    <contact name="FR_floor_found" geom1="FR" reduce="mindist" num="1" data="found"/>
+    <contact name="FL_floor_found" geom1="FL" reduce="mindist" num="1" data="found"/>
+    <contact name="RL_floor_found" geom1="RL" reduce="mindist" num="1" data="found"/>
+    <contact name="RR_floor_found" geom1="RR" reduce="mindist" num="1" data="found"/>
+
   </sensor>
+
+  
   <!-- short -->
   <keyframe>
     <key name="home" qpos="0 0 0.28 1 0 0 0 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8"
