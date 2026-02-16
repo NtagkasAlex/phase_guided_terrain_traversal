@@ -235,7 +235,7 @@ docker build -t ros2-humble-dev .
 ```
 Run:
 ```bash
-docker run -it --rm   -e DISPLAY=$DISPLAY   -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
+docker run -it --rm   -e DISPLAY=$DISPLAY --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
 ```
 For the first time:
 ```bash
@@ -246,7 +246,7 @@ colcon build --merge-install --install-base /root/ros_ws/install --symlink-insta
 ### Running the pipeline
 Make sure ``` /utlidar/cloud ``` and ``` /utlidar/imu ``` topics are providing data.
 ```bash
-docker run -it --rm   -e DISPLAY=$DISPLAY   -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
+docker run -it --rm   -e DISPLAY=$DISPLAY   --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
 ```
 Inside container:
 ```bash
