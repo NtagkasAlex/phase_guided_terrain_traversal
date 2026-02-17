@@ -165,7 +165,8 @@ class Controller:
             
             self._last_action=np.copy(prediction.cpu().detach().numpy().reshape(-1))
             if mode=="wild":
-                oscilator_angles = gait.joint_trajectory_np(self.phase,self.config.reward_config.swing_height,self.config.reward_config.base_feet_distance)
+                _traj_np_fn = gait.joint_trajectory_anymal if consts.ROBOT_NAME == "anymal" else gait.joint_trajectory
+                oscilator_angles = _traj_np_fn(self.phase,self.config.reward_config.swing_height,self.config.reward_config.base_feet_distance)
                 data.ctrl= oscilator_angles + self.config.action_scale * self._last_action
             else:
                 data.ctrl=self._default_angles + self.config.action_scale * self._last_action
@@ -347,8 +348,6 @@ if render:
     viewer.sync()
 start_time = time.time()
 
-
-from robots.gait import joint_gait
 trajectory=[]
 while data.time <total_time:#config_dict.episode_length*sim_dt:
     if pert_enable:

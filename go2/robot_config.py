@@ -74,10 +74,9 @@ _global_kick_durations = [0.3, 1.8]
 _global_kick_wait_times = [0.2, 2.0]
 
 IMPL="warp"#"warp or "jax"
-NCONMAX = 4* TRAINING_DEFAULTS["num_envs"]
-NJMAX = 40
-# NCONMAX = 4* TRAINING_DEFAULTS["num_envs"]
-# NJMAX = 40
+NCONMAX = 128 * TRAINING_DEFAULTS["num_envs"]
+NJMAX = 512
+
 
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
@@ -220,7 +219,7 @@ def baseline_config() -> config_dict.ConfigDict:
         gait_freq=[2, 6],
         heighmap_size=(num_heightscans, num_widthscans),
         impl=IMPL,
-        ncomax=NCONMAX,
+        nconmax=NCONMAX,
         njmax=NJMAX,
     )
 

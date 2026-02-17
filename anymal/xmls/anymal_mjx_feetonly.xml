@@ -5,7 +5,7 @@
     <numeric data="4" name="max_contact_points"/>  
     <numeric data="25" name="max_geom_pairs"/> 
  </custom> 
- <option cone="pyramidal" impratio="100" iterations="5" ls_iterations="5" timestep="0.002" integrator="Euler">
+ <option cone="pyramidal" impratio="100" iterations="5" ls_iterations="5" timestep="0.005" integrator="Euler">
     <flag eulerdamp="disable"/>
   </option>
 
@@ -280,6 +280,10 @@
     <framelinvel objtype="site" objname="FL_foot" name="FL_foot_global_linvel"/>
     <framelinvel objtype="site" objname="RR_foot" name="RR_foot_global_linvel"/>
     <framelinvel objtype="site" objname="RL_foot" name="RL_foot_global_linvel"/>
+    <contact name="FR_floor_found" geom1="FR" reduce="mindist" num="1" data="found"/>
+    <contact name="FL_floor_found" geom1="FL" reduce="mindist" num="1" data="found"/>
+    <contact name="RR_floor_found" geom1="RR" reduce="mindist" num="1" data="found"/>
+    <contact name="RL_floor_found" geom1="RL" reduce="mindist" num="1" data="found"/>
   </sensor>
   
   <actuator>

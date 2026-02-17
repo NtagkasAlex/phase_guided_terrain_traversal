@@ -47,49 +47,9 @@ def get_z(
             swing_down((x - T_peak))
         )
     )
-def get_swing(
-    phi: Union[jax.Array, float], swing_height: Union[jax.Array, float] = 0.08, swing_min: Union[jax.Array, float] = None
-) -> jax.Array:
-    h_max = swing_height
-    mid_point = (1 + p_stance) / 2
-    if swing_min is None:
-        stance = jp.zeros_like(phi)
-    else:
-        stance=swing_min
-    swing_up = spline_func(stance, h_max, 0, 0)
-    swing_down = spline_func(h_max, stance, 0, 0)
 
-    T_swing=(1-p_stance)/2
-
-    return jp.where(
-        x <= p_stance, stance,
-        jp.where(
-            x <= mid_point, swing_up(1/T_swing*(x - p_stance)),
-            swing_down(1/T_swing*(x - mid_point))
-        )
-    )
-def joint_gait(phi, scale=0.3, beta=0.5):
-
-    f_T_swing = 1 / (2 * (1 - beta))
-    _t = phi / (2 * (1 - beta))
-    signal = scale * jp.sin(phi * f_T_swing)
-
-
-
-    true_output = jp.stack([jp.zeros_like(signal), -0.2*jp.sin(phi * f_T_swing)+0.1, 0.4 * jp.sin(phi * f_T_swing)], axis=-1)
-
-
-    false_output = jp.zeros_like(true_output)
-
-
-    condition = (phi < 2 * (1 - beta) * jp.pi) & (phi > 0)
-
-    result = jp.where(condition[..., None], true_output, false_output)
-
-    return true_output.reshape(-1)
 
 def get_robot_joints(foot_position_value, foot_num):
-    # Convert foot position to a JAX array
     foot_position = jp.array(foot_position_value)
 
     # Compute base_tf_offset_hip_joint
@@ -163,67 +123,304 @@ def joint_trajectory(
     ]).reshape(-1)
 
 
-def get_robot_joints_np(foot_position_value, foot_num):
-    foot_position = np.array(foot_position_value, dtype=np.float64)
+# # Link parameters per leg, ordered [FR, FL, RR, RL]
+# # FR=RF in URDF, FL=LF, RR=RH, RL=LH
+# ANYMAL_BASE_TO_HIP = jp.array([
+#     [ 0.2999, -0.104,  0.0],   # FR
+#     [ 0.2999,  0.104,  0.0],   # FL
+#     [-0.2999, -0.104,  0.0],   # RR
+#     [-0.2999,  0.104,  0.0],   # RL
+# ])
+# ANYMAL_HIP_TO_THIGH = jp.array([
+#     [ 0.0599, -0.08381, 0.0],  # FR
+#     [ 0.0599,  0.08381, 0.0],  # FL
+#     [-0.0599, -0.08381, 0.0],  # RR
+#     [-0.0599,  0.08381, 0.0],  # RL
+# ])
+# ANYMAL_THIGH_TO_SHANK = jp.array([
+#     [0.0, -0.1003, -0.285],    # FR
+#     [0.0,  0.1003, -0.285],    # FL
+#     [0.0, -0.1003, -0.285],    # RR
+#     [0.0,  0.1003, -0.285],    # RL
+# ])
+# ANYMAL_SHANK_TO_FOOT = jp.array([
+#     [ 0.08795, -0.01305, -0.33797],  # FR
+#     [ 0.08795,  0.01305, -0.33797],  # FL
+#     [-0.08795, -0.01305, -0.33797],  # RR
+#     [-0.08795,  0.01305, -0.33797],  # RL
+# ])
+# # Nominal foot x,y positions at zero config (base_to_hip + hip_to_thigh + thigh_to_shank + shank_to_foot)
+# ANYMAL_NOMINAL_FOOT_POS = ANYMAL_BASE_TO_HIP + ANYMAL_HIP_TO_THIGH + ANYMAL_THIGH_TO_SHANK + ANYMAL_SHANK_TO_FOOT
+# # X configuration: front knees bend backwards, rear knees bend forwards
+# ANYMAL_KNEE_BEND_BWD = jp.array([True, True, False, False])
 
-    base_tf_offset_hip_joint = np.array([0.1934, 0.0465, 0.0], dtype=np.float64)
 
-    if foot_num > 1:
-        base_tf_offset_hip_joint[0] *= -1
-    if foot_num % 2 == 1:
-        base_tf_offset_hip_joint[1] *= -1
+# def _anymal_ik(pos_base_to_foot, base_to_hip, hip_to_thigh, thigh_to_shank, shank_to_foot, knee_bend_bwd):
+#     pos_hip_to_foot = pos_base_to_foot - base_to_hip
+#     y_at_zero = (hip_to_thigh + thigh_to_shank + shank_to_foot)[1]
 
-    delta = foot_position - base_tf_offset_hip_joint
-    foot_distance = np.linalg.norm(delta)
+#     # qHAA
+#     pos_yz_sq = pos_hip_to_foot[1]**2 + pos_hip_to_foot[2]**2
+#     r_delta = jp.maximum(pos_yz_sq - y_at_zero**2, 0.0)
+#     r = jp.sqrt(r_delta)
+#     delta = jp.arctan2(pos_hip_to_foot[1], -pos_hip_to_foot[2])
+#     beta = jp.arctan2(r, y_at_zero)
+#     q_haa = beta + delta - jp.pi / 2
 
-    try:
-        E = np.sqrt(max(foot_distance**2 - HIP_LENGTH**2, 1e-8))
+#     # Rotation matrix (HAA rotation about x-axis)
+#     cos_haa = jp.cos(q_haa)
+#     sin_haa = jp.sin(q_haa)
+#     R_hip = jp.array([
+#         [1.0, 0.0, 0.0],
+#         [0.0, cos_haa, -sin_haa],
+#         [0.0, sin_haa, cos_haa],
+#     ])
 
-        y = np.arccos(np.clip((E**2 + THIGH_LENGTH**2 - CALF_LENGTH**2) / (2 * E * THIGH_LENGTH), -1.0, 1.0))
-        S = np.arccos(np.clip((CALF_LENGTH**2 + THIGH_LENGTH**2 - E**2) / (2 * CALF_LENGTH * THIGH_LENGTH), -1.0, 1.0)) - np.pi
+#     pos_base_to_thigh = base_to_hip + R_hip @ hip_to_thigh
+#     pos_thigh_to_foot = pos_base_to_foot - pos_base_to_thigh
+#     d_kfe = jp.dot(pos_thigh_to_foot, pos_thigh_to_foot)
 
-        C = delta[0]
-        R = delta[1]
+#     H = hip_to_thigh
+#     T = thigh_to_shank
+#     S = shank_to_foot
 
-        if foot_position[2] < 0:
-            A = np.arcsin(np.clip(-C / E, -1.0, 1.0)) + y
-        else:
-            A = -np.pi + np.arcsin(np.clip(C / E, -1.0, 1.0)) + y
+#     # KFE trigonometric equation: a*cos(x) + b*sin(x) = c
+#     a_kfe = -S[0]*T[2]*2.0 + S[2]*T[0]*2.0
+#     b_kfe =  S[0]*T[0]*2.0 + S[2]*T[2]*2.0
+#     c_kfe = (S[1]*T[1]*2.0
+#              + S[0]**2 + S[1]**2 + S[2]**2
+#              + T[0]**2 + T[1]**2 + T[2]**2)
+#     c_val = d_kfe - c_kfe
+#     disc = jp.maximum(a_kfe**2 + b_kfe**2 - c_val**2, 0.0)
+#     first_term = jp.arctan2(a_kfe, b_kfe)
+#     second_term = jp.arctan2(jp.sqrt(disc), c_val)
+#     q_kfe = jp.where(knee_bend_bwd, first_term - second_term, first_term + second_term)
 
-        O = np.sqrt(max(foot_distance**2 - C**2, 1e-8))
-        L = np.arcsin(np.clip(R / O, -1.0, 1.0))
+#     # HFE trigonometric equation
+#     d_hfe = jp.dot(pos_hip_to_foot, pos_hip_to_foot)
+#     cos_kfe = jp.cos(q_kfe)
+#     sin_kfe = jp.sin(q_kfe)
 
-        P = -1 if foot_position[2] > 0 else 1
-        hip_offset = np.arcsin(np.clip(HIP_LENGTH / O, -1.0, 1.0))
+#     a_hfe = (H[0]*T[2]*2.0 - H[2]*T[0]*2.0
+#              - H[0]*S[0]*sin_kfe*2.0 + H[0]*S[2]*cos_kfe*2.0
+#              - H[2]*S[0]*cos_kfe*2.0 - H[2]*S[2]*sin_kfe*2.0)
+#     b_hfe = (H[0]*T[0]*2.0 + H[2]*T[2]*2.0
+#              + H[0]*S[0]*cos_kfe*2.0 + H[0]*S[2]*sin_kfe*2.0
+#              - H[2]*S[0]*sin_kfe*2.0 + H[2]*S[2]*cos_kfe*2.0)
+#     c_hfe = (S[1]*T[1]*2.0
+#              + H[0]**2 + H[1]**2 + H[2]**2
+#              + S[0]**2 + S[1]**2 + S[2]**2
+#              + T[0]**2 + T[1]**2 + T[2]**2
+#              + H[1]*S[1]*2.0 + H[1]*T[1]*2.0
+#              + S[0]*T[0]*cos_kfe*2.0 - S[0]*T[2]*sin_kfe*2.0
+#              + S[2]*T[0]*sin_kfe*2.0 + S[2]*T[2]*cos_kfe*2.0)
+#     c_val_hfe = d_hfe - c_hfe
+#     disc_hfe = jp.maximum(a_hfe**2 + b_hfe**2 - c_val_hfe**2, 0.0)
+#     first_term_hfe = jp.arctan2(a_hfe, b_hfe)
+#     second_term_hfe = jp.arctan2(jp.sqrt(disc_hfe), c_val_hfe)
+#     q_hfe = jp.where(knee_bend_bwd, first_term_hfe + second_term_hfe, first_term_hfe - second_term_hfe)
 
-        if foot_num % 2 == 0:
-            J = P * (L - hip_offset)
-        else:
-            J = P * (L + hip_offset)
+#     joint_sum = q_haa + q_hfe + q_kfe
+#     result = jp.where(jp.isnan(joint_sum), jp.zeros(3), jp.array([q_haa, q_hfe, q_kfe]))
+#     return result
 
-        if np.isnan(J) or np.isnan(A) or np.isnan(S):
-            return 0.0, 0.0, 0.0
 
-        return np.array([J, A, S])
+# @jax.jit
+# def joint_trajectory_anymal(
+#     phi: Union[jax.Array, float], swing_height: Union[jax.Array, float] = -0.4, swing_min: Union[jax.Array, float] = None
+# ) -> jax.Array:
+#     z = get_z(phi, swing_height=swing_height, swing_min=swing_min)
+#     # Use nominal x,y from ANYmal kinematic chain; z from swing trajectory
+#     p_fr = jp.array([ANYMAL_NOMINAL_FOOT_POS[0, 0], ANYMAL_NOMINAL_FOOT_POS[0, 1], z[0]])
+#     p_fl = jp.array([ANYMAL_NOMINAL_FOOT_POS[1, 0], ANYMAL_NOMINAL_FOOT_POS[1, 1], z[1]])
+#     p_rr = jp.array([ANYMAL_NOMINAL_FOOT_POS[2, 0], ANYMAL_NOMINAL_FOOT_POS[2, 1], z[2]])
+#     p_rl = jp.array([ANYMAL_NOMINAL_FOOT_POS[3, 0], ANYMAL_NOMINAL_FOOT_POS[3, 1], z[3]])
 
-    except Exception:
-        return 0.0, 0.0, 0.0
+#     return jp.array([
+#         _anymal_ik(p_fr, ANYMAL_BASE_TO_HIP[0], ANYMAL_HIP_TO_THIGH[0], ANYMAL_THIGH_TO_SHANK[0], ANYMAL_SHANK_TO_FOOT[0], True),
+#         _anymal_ik(p_fl, ANYMAL_BASE_TO_HIP[1], ANYMAL_HIP_TO_THIGH[1], ANYMAL_THIGH_TO_SHANK[1], ANYMAL_SHANK_TO_FOOT[1], True),
+#         _anymal_ik(p_rr, ANYMAL_BASE_TO_HIP[2], ANYMAL_HIP_TO_THIGH[2], ANYMAL_THIGH_TO_SHANK[2], ANYMAL_SHANK_TO_FOOT[2], False),
+#         _anymal_ik(p_rl, ANYMAL_BASE_TO_HIP[3], ANYMAL_HIP_TO_THIGH[3], ANYMAL_THIGH_TO_SHANK[3], ANYMAL_SHANK_TO_FOOT[3], False),
+#     ]).reshape(-1)
 
-def joint_trajectory_np(
-    phi: Union[jax.Array, float], swing_height: Union[jax.Array, float] = 0.08, swing_min: Union[jax.Array, float] = None
+# --- Kinematic Constants (LF, RF, LH, RH) ---
+BASE_TO_HIP = jp.array([
+    [0.2999, 0.104, 0.0], [0.2999, -0.104, 0.0],
+    [-0.2999, 0.104, 0.0], [-0.2999, -0.104, 0.0]
+])
+
+HIP_TO_THIGH = jp.array([
+    [0.0599, 0.08381, 0.0], [0.0599, -0.08381, 0.0],
+    [-0.0599, 0.08381, 0.0], [-0.0599, -0.08381, 0.0]
+])
+
+THIGH_TO_SHANK = jp.array([
+    [0.0, 0.1003, -0.285], [0.0, -0.1003, -0.285],
+    [0.0, 0.1003, -0.285], [0.0, -0.1003, -0.285]
+])
+
+SHANK_TO_FOOT = jp.array([
+    [0.08795, 0.01305, -0.33797], [0.08795, -0.01305, -0.33797],
+    [-0.08795, 0.01305, -0.33797], [-0.08795, -0.01305, -0.33797]
+])
+
+# LF/RF: True (Knee back), LH/RH: False (Knee forward)
+KNEE_BEND_BACKWARDS = jp.array([True, True, False, False])
+
+def solve_linear_trig_jax(a, b, c):
+    """Solves a*cos(x) + b*sin(x) = c"""
+    delta = a**2 + b**2 - c**2
+    delta = jp.maximum(0.0, delta)
+    first_term = jp.atan2(a, b)
+    second_term = jp.atan2(jp.sqrt(delta), c)
+    return (first_term - second_term), (first_term + second_term)
+
+def get_anymal_joints(foot_pos_value, foot_num):
+    p_base_to_foot = jp.array(foot_pos_value)
+    
+    # Limb-specific selection
+    b_to_h = BASE_TO_HIP[foot_num]
+    h_to_t = HIP_TO_THIGH[foot_num]
+    t_to_s = THIGH_TO_SHANK[foot_num]
+    s_to_f = SHANK_TO_FOOT[foot_num]
+    knee_back = KNEE_BEND_BACKWARDS[foot_num]
+
+    # 1. HAA Calculation
+    p_hip_to_foot = p_base_to_foot - b_to_h
+    y_zero = h_to_t[1] + t_to_s[1] + s_to_f[1]
+    
+    r_yz_sq = p_hip_to_foot[1]**2 + p_hip_to_foot[2]**2
+    r_delta = jp.maximum(0.0, r_yz_sq - y_zero**2)
+    r = jp.sqrt(r_delta)
+    
+    delta_angle = jp.atan2(p_hip_to_foot[1], -p_hip_to_foot[2])
+    beta = jp.atan2(r, y_zero)
+    q_haa = beta + delta_angle - jp.pi/2
+
+    # 2. KFE Calculation
+    c_haa, s_haa = jp.cos(q_haa), jp.sin(q_haa)
+    # Rotate h_to_t by q_haa to find thigh position in base frame
+    p_base_to_thigh = b_to_h + jp.array([
+        h_to_t[0],
+        c_haa * h_to_t[1] - s_haa * h_to_t[2],
+        s_haa * h_to_t[1] + c_haa * h_to_t[2]
+    ])
+    p_thigh_to_foot = p_base_to_foot - p_base_to_thigh
+    d_kfe = jp.sum(p_thigh_to_foot**2)
+
+    a_kfe = s_to_f[0] * t_to_s[2] * -2.0 + s_to_f[2] * t_to_s[0] * 2.0
+    b_kfe = s_to_f[0] * t_to_s[0] * 2.0 + s_to_f[2] * t_to_s[2] * 2.0
+    c_kfe = (s_to_f[1] * t_to_s[1] * 2.0 + jp.sum(s_to_f**2) + jp.sum(t_to_s**2))
+    
+    sol1_k, sol2_k = solve_linear_trig_jax(a_kfe, b_kfe, d_kfe - c_kfe)
+    q_kfe = lax.select(knee_back, sol1_k, sol2_k)
+
+    # 3. HFE Calculation
+    d_hfe = jp.sum(p_hip_to_foot**2)
+    t2, t3 = jp.cos(q_kfe), jp.sin(q_kfe)
+    
+    a_hfe = (h_to_t[0]*t_to_s[2]*2.0 - h_to_t[2]*t_to_s[0]*2.0 - 
+             h_to_t[0]*s_to_f[0]*t3*2.0 + h_to_t[0]*s_to_f[2]*t2*2.0 - 
+             h_to_t[2]*s_to_f[0]*t2*2.0 - h_to_t[2]*s_to_f[2]*t3*2.0)
+    
+    b_hfe = (h_to_t[0]*t_to_s[0]*2.0 + h_to_t[2]*t_to_s[2]*2.0 + 
+             h_to_t[0]*s_to_f[0]*t2*2.0 + h_to_t[0]*s_to_f[2]*t3*2.0 - 
+             h_to_t[2]*s_to_f[0]*t3*2.0 + h_to_t[2]*s_to_f[2]*t2*2.0)
+    
+    c_hfe = (s_to_f[1]*t_to_s[1]*2.0 + jp.sum(h_to_t**2) + jp.sum(s_to_f**2) + 
+             jp.sum(t_to_s**2) + h_to_t[1]*s_to_f[1]*2.0 + h_to_t[1]*t_to_s[1]*2.0 + 
+             s_to_f[0]*t_to_s[0]*t2*2.0 - s_to_f[0]*t_to_s[2]*t3*2.0 + 
+             s_to_f[2]*t_to_s[0]*t3*2.0 + s_to_f[2]*t_to_s[2]*t2*2.0)
+
+    sol1_h, sol2_h = solve_linear_trig_jax(a_hfe, b_hfe, d_hfe - c_hfe)
+    q_hfe = lax.select(knee_back, sol2_h, sol1_h)
+
+    result = jp.array([q_haa, q_hfe, q_kfe])
+    return lax.select(jp.any(jp.isnan(result)), jp.zeros(3), result)
+
+# --- Trajectory Function ---
+
+@jax.jit
+def joint_trajectory_anymal(
+    phi: Union[jax.Array, float], 
+    swing_height: Union[jax.Array, float] = 0.08, 
+    swing_min: Union[jax.Array, float] = None
 ) -> jax.Array:
+    # Use swing_min in the get_z call
     z = get_z(phi, swing_height=swing_height, swing_min=swing_min)
-    x_off=0.15
-    y_off=0.15
-    p1=np.array([x_off,-y_off,z[0]])#FR
-    p2=np.array([x_off,y_off,z[1]])#FL
-    p3=np.array([x_off,-y_off,z[2]])#RR
-    p4=np.array([x_off,y_off,z[3]])#RL
+    
+    # Nominal horizontal offsets for ANYmal C stance
+    x_off = 0.40
+    y_off = 0.30
+    
+    # Mapping to correct foot_num indices: 0:LF, 1:RF, 2:LH, 3:RH
+    p_lf = jp.array([ x_off,  y_off, z[0]]) # LF
+    p_rf = jp.array([ x_off, -y_off, z[1]]) # RF
+    p_lh = jp.array([-x_off,  y_off, z[2]]) # LH
+    p_rh = jp.array([-x_off, -y_off, z[3]]) # RH
 
-
-    return np.array([
-        get_robot_joints_np(p1, 1),  # Front Right
-        get_robot_joints_np(p2, 0),  # Front Left
-        get_robot_joints_np(p3, 1),  # Rear Right
-        get_robot_joints_np(p4, 0)   # Rear Left
+    return jp.array([
+        get_anymal_joints(p_lf, 0),
+        get_anymal_joints(p_rf, 1),
+        get_anymal_joints(p_lh, 2),
+        get_anymal_joints(p_rh, 3)
     ]).reshape(-1)
+
+if __name__ == "__main__":
+    import mujoco
+    import mujoco.viewer
+    import time
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Visualize gait oscillation")
+    parser.add_argument("--robot", type=str, default="anymal", choices=["anymal", "go2"])
+    parser.add_argument("--freq", type=float, default=1., help="Gait frequency in Hz")
+    parser.add_argument("--swing-height", type=float, default=None, help="Swing peak z (negative, in base frame)")
+    parser.add_argument("--stance-z", type=float, default=None, help="Stance z (negative, in base frame)")
+    args = parser.parse_args()
+
+    if args.robot == "anymal":
+        xml_path = "anymal/xmls/scene_mjx_feetonly.xml"
+        asset_dir = "anymal/xmls/"
+        traj_fn = joint_trajectory_anymal
+        swing_height = args.swing_height if args.swing_height is not None else -0.35
+        stance_z = args.stance_z if args.stance_z is not None else -0.5
+    else:
+        xml_path = "go2/xmls/scene_mjx_feetonly.xml"
+        asset_dir = "go2/xmls/"
+        traj_fn = joint_trajectory
+        swing_height = args.swing_height if args.swing_height is not None else -0.2
+        stance_z = args.stance_z if args.stance_z is not None else -0.3
+
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full_xml = os.path.join(root, xml_path)
+    full_asset_dir = os.path.join(root, asset_dir)
+
+    model = mujoco.MjModel.from_xml_path(full_xml)
+    data = mujoco.MjData(model)
+    
+    mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_forward(model, data)
+
+    home_qpos_base = data.qpos[:7].copy()
+
+    phase = np.array(PHASES, dtype=np.float64)
+    dt = model.opt.timestep
+    phase_dt = 2 * np.pi * dt * args.freq
+
+    print(f"Robot: {args.robot}")
+    print(f"Freq: {args.freq} Hz, swing_height: {swing_height}, stance_z: {stance_z}")
+    print(f"Phase dt per step: {phase_dt:.5f} rad")
+
+    with mujoco.viewer.launch_passive(model, data) as viewer:
+        while viewer.is_running():
+            phase = (phase + phase_dt) % (2 * np.pi)
+            q_target = traj_fn(phase, swing_height=swing_height, swing_min=stance_z)
+            data.ctrl[:] = q_target
+            mujoco.mj_step(model, data)
+            data.qpos[:7] = home_qpos_base
+            data.qvel[:6] = 0.0
+            mujoco.mj_forward(model, data)
+            viewer.sync()
+            time.sleep(dt)

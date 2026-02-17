@@ -28,11 +28,15 @@ class Joystick(joystick_base.Joystick_Base):
         config=config,
         config_overrides=config_overrides,
     )
+    if consts.ROBOT_NAME == "anymal":
+      self._joint_trajectory_fn = gait.joint_trajectory_anymal
+    else:
+      self._joint_trajectory_fn = gait.joint_trajectory
 
   def step(self, state: mjx_env.State, action: jax.Array) -> mjx_env.State:
     if self._config.pert_config.enable:
       state = self._maybe_apply_perturbation(state)
-    oscilator_pose=gait.joint_trajectory(state.info["phase"], self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance)
+    oscilator_pose=self._joint_trajectory_fn(state.info["phase"], self._config.reward_config.swing_height,self._config.reward_config.base_feet_distance)
 
     motor_targets = oscilator_pose + action * self._config.action_scale
     data = mjx_env.step(

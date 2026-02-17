@@ -51,8 +51,8 @@ BODY_ID_OFFSET = 14
 
 # ---- Training defaults ----
 TRAINING_DEFAULTS = dict(
-    num_envs=2048,
-    batch_size=512,
+    num_envs=8192,
+    batch_size=1024,
     num_minibatches=16,
     gait_freq_override=[1, 1.5],
 )
@@ -60,7 +60,7 @@ TRAINING_DEFAULTS = dict(
 # ---- Deploy defaults ----
 DEPLOY_DEFAULTS = dict(
     command=[0.4, 0.0, 0.0],
-    gait_freq=1.3,
+    gait_freq=1.,
     policy_path="policies/anymal",
     pert_enable=True,
     stairs_enabled=True,
@@ -73,15 +73,19 @@ _global_velocity_kick = [0.5, 2]
 _global_kick_durations = [0.3, 1.8]
 _global_kick_wait_times = [0.2, 2.0]
 
+IMPL = "warp"
+NCONMAX = 128 * TRAINING_DEFAULTS["num_envs"]
+NJMAX = 512
+
 
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
         ctrl_dt=0.02,
-        sim_dt=0.002,
+        sim_dt=0.005,
         episode_length=1000,
         vel_percentage=0.65,
-        Kp=80.0,
-        Kd=2.,
+        Kp=100.0,
+        Kd=1.,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,
@@ -123,7 +127,7 @@ def default_config() -> config_dict.ConfigDict:
                 center=-0.,
             ),
             tracking_sigma=0.25,
-            swing_height=-0.4,
+            swing_height=-0.35,
             base_feet_distance=-0.5,
             phase_sigma=0.05,
         ),
@@ -139,7 +143,11 @@ def default_config() -> config_dict.ConfigDict:
             u_min=[-1.5, -0.8, -1.2],
             b=[0.9, 0.25, 0.5],
         ),
-        gait_freq=[2, 6],
+        gait_freq=[0.5, 1.5],
+        heighmap_size=(num_heightscans, num_widthscans),
+        impl=IMPL,
+        nconmax=NCONMAX,
+        njmax=NJMAX,
     )
 
 
@@ -149,8 +157,8 @@ def baseline_config() -> config_dict.ConfigDict:
         sim_dt=0.005,
         vel_percentage=0.65,
         episode_length=1000,
-        Kp=40.0,
-        Kd=0.5,
+        Kp=100.0,
+        Kd=1.0,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,
@@ -192,8 +200,8 @@ def baseline_config() -> config_dict.ConfigDict:
                 center=-0.,
             ),
             tracking_sigma=0.25,
-            swing_height=-0.2,
-            base_feet_distance=-0.3,
+            swing_height=-0.35,
+            base_feet_distance=-0.5,
             phase_sigma=0.05,
         ),
         pert_config=config_dict.create(
@@ -208,7 +216,11 @@ def baseline_config() -> config_dict.ConfigDict:
             u_min=[-1.5, -0.8, -1.2],
             b=[0.9, 0.25, 0.5],
         ),
-        gait_freq=[2, 6],
+        gait_freq=[0.5, 1.5],
+        heighmap_size=(num_heightscans, num_widthscans),
+        impl=IMPL,
+        nconmax=NCONMAX,
+        njmax=NJMAX,
     )
 
 
@@ -218,8 +230,8 @@ def wild_config() -> config_dict.ConfigDict:
         sim_dt=0.005,
         vel_percentage=0.65,
         episode_length=1000,
-        Kp=40.0,
-        Kd=0.5,
+        Kp=100.0,
+        Kd=1.0,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,
@@ -261,8 +273,8 @@ def wild_config() -> config_dict.ConfigDict:
                 center=-0.,
             ),
             tracking_sigma=0.25,
-            swing_height=-0.2,
-            base_feet_distance=-0.3,
+            swing_height=-0.35,
+            base_feet_distance=-0.5,
             phase_sigma=0.05,
         ),
         pert_config=config_dict.create(
@@ -277,5 +289,9 @@ def wild_config() -> config_dict.ConfigDict:
             u_min=[-1.5, -0.8, -1.2],
             b=[0.9, 0.25, 0.5],
         ),
-        gait_freq=[2, 6],
+        gait_freq=[0.5, 1.5],
+        heighmap_size=(num_heightscans, num_widthscans),
+        impl=IMPL,
+        nconmax=NCONMAX,
+        njmax=NJMAX,
     )
