@@ -19,6 +19,9 @@ import argparse
 
 _parser = argparse.ArgumentParser(description="Deploy heightmap")
 _parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+_parser.add_argument('--method', type=str, default='pgtt', help='Method: pgtt, baseline, or wild')
+_parser.add_argument('--level', type=str, default='level03', help='Terrain level: level03, level07, level10, level13')
+_parser.add_argument('--run', type=int, default=0, help='Run number')
 _args, _ = _parser.parse_known_args()
 robot_cfg = robots.get_robot_config(_args.robot)
 consts = robot_cfg
@@ -76,8 +79,8 @@ ros_enabled=False
 render=True
 feet_scans=False
 
-mode="pgtt"
-filename=_deploy_defaults["policy_path"]
+mode=_args.method
+filename=f"policies/policy_{_args.robot}_{_args.method}_{_args.level}_run{_args.run}"
 
 total_time=50
 
