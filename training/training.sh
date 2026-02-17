@@ -1,13 +1,13 @@
 #!/bin/bash
 
 ROBOT="${1:-go2}"
-STEPS=300_000_000
+STEPS=200_000_000
 METHODS=("pgtt" "baseline" "wild")
 LEVELS=("level03" "level07" "level10" "level13")
 
 echo "Training robot: $ROBOT"
 
-for ((run=0; run<5; run++)); do
+for ((run=0; run<1; run++)); do
     echo "=== Run $((run+1)) ==="
 
     for method in "${METHODS[@]}"; do

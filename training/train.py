@@ -119,7 +119,7 @@ def progress_training(num_steps, metrics,env_cfg):
 
   # termination critiria
   if len(y_data)>=2:
-    if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.008:
+    if vel_tracking_per>env_cfg.vel_percentage and ang_tracking_per>env_cfg.vel_percentage and abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.01:
       return True
     elif abs((y_data[-1]-y_data[-2])/y_data[-1])<=0.003:
       return True
