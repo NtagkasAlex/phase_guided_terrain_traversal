@@ -447,49 +447,65 @@ def random_test_env(num_bodies,size):
 
     tg.Save(TEST_SCENE_PATH)
     
+def _setup_paths(robot):
+    global INPUT_SCENE_PATH, OUTPUT_SCENE_PATH, TEST_SCENE_PATH, DATA_SCENE_PATH, HUGE_STAIRS
+    paths = _get_robot_paths(robot)
+    INPUT_SCENE_PATH = paths["input"]
+    OUTPUT_SCENE_PATH = paths["output"]
+    TEST_SCENE_PATH = paths["test"]
+    DATA_SCENE_PATH = paths["data"]
+    HUGE_STAIRS = paths["huge_stairs"]
+
 if __name__ == "__main__":
-    _parser = _argparse.ArgumentParser(description="Terrain Generator")
-    _parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
-    _args, _remaining = _parser.parse_known_args()
-    ROBOT = _args.robot
-    _paths = _get_robot_paths(ROBOT)
-    INPUT_SCENE_PATH = _paths["input"]
-    OUTPUT_SCENE_PATH = _paths["output"]
-    TEST_SCENE_PATH = _paths["test"]
-    DATA_SCENE_PATH = _paths["data"]
-    HUGE_STAIRS = _paths["huge_stairs"]
+    parser = _argparse.ArgumentParser(description="Terrain Generator")
+    parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+    subparsers = parser.add_subparsers(dest='mode', required=True)
 
-    size=9
-    length=None
-    num_steps=3
-    width=0.1
-    step_height=0.15
-    num_envs,num_objects=100,100
+    # 1) levels — produce all level .npy terrain files
+    p_levels = subparsers.add_parser('levels', help='Generate all level .npy terrain files for DR')
+    p_levels.add_argument('--num_envs', type=int, default=100)
+    p_levels.add_argument('--num_objects', type=int, default=100)
+    p_levels.add_argument('--size', type=int, default=9)
+    p_levels.add_argument('--num_steps', type=int, default=3)
+    p_levels.add_argument('--width', type=float, default=0.1)
+    p_levels.add_argument('--step_height', type=float, default=0.15)
 
-    np.set_printoptions(precision=2,suppress=True)
+    # 2) fill — fill the template scene XML with placeholder boxes
+    p_fill = subparsers.add_parser('fill', help='Fill terrain_scene_mjx.xml with placeholder boxes')
+    p_fill.add_argument('--num_objects', type=int, default=100)
+    p_fill.add_argument('--num_steps', type=int, default=3)
+    p_fill.add_argument('--width', type=float, default=0.1)
+    p_fill.add_argument('--step_height', type=float, default=0.15)
 
+    # 3) test — create a random test terrain
+    p_test = subparsers.add_parser('test', help='Generate a random test terrain (terrain_test_mjx.xml)')
+    p_test.add_argument('--num_objects', type=int, default=100)
+    p_test.add_argument('--size', type=int, default=9)
 
-    # # Uncomment to create terrains for DR
-    # numbers=["01","02","03","04","05","06","07","08","09"]
-    # for number in numbers:
-    #     value = float("0." + number)
-    #     print(value)  # 0.04
-    #     res=create_random_matrix(num_envs,num_objects,size,value,value)
-    #     np.save(f"./terrains/level{number}",res)
-    #     print(res.shape)
-    # res=create_random_matrix(num_envs,num_objects,size,0.01,0.06)
-    # np.save(f"./terrains/discrete",res)
-    # print(res.shape)
-    # exit()
+    args = parser.parse_args()
+    _setup_paths(args.robot)
+    np.set_printoptions(precision=2, suppress=True)
 
-    #filling
-    # tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
-    # wave=generate_14(size=size)
-    # grid = create_centered_grid(size, tg.length)
-    # for i in range(num_objects):
-    #     tg.AddBox([100+i,100+i,10])
-    # tg.Save()
+    if args.mode == 'levels':
+        numbers = ["01", "02", "03", "04", "05", "06", "07", "08", "09"]
+        for number in numbers:
+            value = float("0." + number)
+            print(f"Generating level{number} (height={value})...")
+            res = create_random_matrix(args.num_envs, args.num_objects, args.size, value, value)
+            np.save(f"./terrains/level{number}", res)
+            print(f"  -> terrains/level{number}.npy  shape={res.shape}")
+        res = create_random_matrix(args.num_envs, args.num_objects, args.size, 0.01, 0.06)
+        np.save("./terrains/discrete", res)
+        print(f"  -> terrains/discrete.npy  shape={res.shape}")
 
-    #Uncomment for one random terrain for testing.
-    random_test_env(num_objects,size)
-    exit()
+    elif args.mode == 'fill':
+        tg = TerrainGenerator(width=args.width, step_height=args.step_height,
+                              num_stairs=args.num_steps, render=True)
+        for i in range(args.num_objects):
+            tg.AddBox([100 + i, 100 + i, 10])
+        tg.Save()
+        print(f"Wrote {tg.count_boxes} placeholder boxes -> {OUTPUT_SCENE_PATH}")
+
+    elif args.mode == 'test':
+        random_test_env(args.num_objects, args.size)
+        print(f"Wrote random test terrain -> {TEST_SCENE_PATH}")
