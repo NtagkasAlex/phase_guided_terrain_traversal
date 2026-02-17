@@ -192,7 +192,7 @@ def baseline_config() -> config_dict.ConfigDict:
                 feet_clearance=-0.5,
                 feet_height=-0.,
                 feet_slip=-0.1,
-                feet_air_time=1.0,
+                feet_air_time=2.0,
                 feet_phase=0.0,
                 feet_swing=0.,
                 body_height=-0.,

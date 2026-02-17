@@ -14,7 +14,7 @@ for ((run=0; run<1; run++)); do
         prev_ckpt=""
 
         for level in "${LEVELS[@]}"; do
-            name="${method}_${level}_run${run}"
+            name="${ROBOT}_${method}_${level}_run${run}"
             rm -rf "checks_stairs/checkpoint_${name}"
 
             if [[ -n "$prev_ckpt" ]]; then
