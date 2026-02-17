@@ -15,14 +15,14 @@ for ((run=0; run<1; run++)); do
 
         for level in "${LEVELS[@]}"; do
             name="${ROBOT}_${method}_${level}_run${run}"
-            rm -rf "checks_stairs/checkpoint_${name}"
+            rm -rf "checks_stairs/${ROBOT}/checkpoint_${name}"
 
             if [[ -n "$prev_ckpt" ]]; then
                 python3 -m training.train \
                     --robot "$ROBOT" \
                     --method "$method" \
                     --index "$name" \
-                    --checkpoint_folder "checks_stairs/checkpoint_${prev_ckpt}" \
+                    --checkpoint_folder "checks_stairs/${ROBOT}/checkpoint_${prev_ckpt}" \
                     --terrain_file "terrains/${level}.npy" \
                     --num_timesteps "$STEPS"
             else
