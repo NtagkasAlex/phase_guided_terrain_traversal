@@ -59,11 +59,11 @@ TRAINING_DEFAULTS = dict(
 
 # ---- Deploy defaults ----
 DEPLOY_DEFAULTS = dict(
-    command=[0.4, 0.0, 0.0],
+    command=[1.0, 0.4, 0.0],
     gait_freq=1.,
     policy_path="policies/anymal",
-    pert_enable=True,
-    stairs_enabled=True,
+    pert_enable=False,
+    stairs_enabled=False,
     ros_velocity_scale=[0.5, 0.5, 0.5],
 )
 
@@ -179,20 +179,20 @@ def baseline_config() -> config_dict.ConfigDict:
             scales=config_dict.create(
                 tracking_lin_vel=1.0,
                 tracking_ang_vel=0.5,
-                lin_vel_z=-4.0,
+                lin_vel_z=-1.0,
                 ang_vel_xy=-0.05,
                 orientation=-0.,
-                dof_pos_limits=-1.0,
+                dof_pos_limits=-0.,
                 pose=-0.5,
                 termination=-1.0,
                 stand_still=-0.0,
-                torques=-0.0002,
-                action_rate=-0.25,
-                energy=-0.001,
-                feet_clearance=-0.1,
+                torques=-0.00001,
+                action_rate=-0.01,
+                energy=-0.0,
+                feet_clearance=-0.0,
                 feet_height=-0.,
                 feet_slip=-0.0,
-                feet_air_time=2.0,
+                feet_air_time=0.125,
                 feet_phase=0.0,
                 feet_swing=0.,
                 body_height=-0.,
