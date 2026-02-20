@@ -60,10 +60,10 @@ TRAINING_DEFAULTS = dict(
 # ---- Deploy defaults ----
 DEPLOY_DEFAULTS = dict(
     command=[0.6, 0.4, 0.0],
-    gait_freq=2.0,
+    gait_freq=2,
     policy_path="policies/pgtt",
     pert_enable=False,
-    stairs_enabled=False,
+    stairs_enabled=True,
     ros_velocity_scale=[0.5, 0.5, 1.0],
 )
 

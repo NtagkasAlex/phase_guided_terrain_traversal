@@ -54,12 +54,20 @@ Terrains are produced using Wave Function Collapse in MuJoCo.
 
 To generate terrains:
 ```bash
-# Generate for Go2 (default)
-python terrain/generator.py
+# Generate level .npy files for training (Go2 default)
+python terrain/generator.py levels
 
-# Generate for ANYmal
-python terrain/generator.py --robot anymal
+# Generate level .npy files for ANYmal
+python terrain/generator.py --robot anymal levels
+
+# Fill template XML with placeholder boxes
+python terrain/generator.py fill --num_objects 100
+
+# Create a random test terrain for visualization
+python terrain/generator.py test --step_height 0.08 --width 0.4 --num_steps 4
 ```
+
+See [terrain/README.md](terrain/README.md) for the full argument reference for each subcommand.
 
 ## Training Pipeline
 
@@ -196,9 +204,27 @@ python deploy/deploy_heightmap.py --robot go2
 
 # Deploy ANYmal policy in simulation
 python deploy/deploy_heightmap.py --robot anymal
+
+# Enable or disable stairs terrain
+python deploy/deploy_heightmap.py --stairs
+python deploy/deploy_heightmap.py --no-stairs
+
+# Override command velocity
+python deploy/deploy_heightmap.py --vx 1.0 --vy 0.0 --yaw 0.0
 ```
 
-Default deployment parameters (command velocity, gait frequency, policy path, perturbation settings) are loaded from `DEPLOY_DEFAULTS` in each robot's config. You can modify these directly in `go2/robot_config.py` or `anymal/robot_config.py`.
+Default deployment parameters (command velocity, gait frequency, policy path, perturbation settings) are loaded from `DEPLOY_DEFAULTS` in each robot's config. CLI flags override the config values; any flag that is omitted falls back to the config default.
+
+| Argument    | Default         | Description                                      |
+|-------------|-----------------|--------------------------------------------------|
+| `--robot`   | `go2`           | Robot: `go2` or `anymal`                         |
+| `--method`  | `pgtt`          | Method: `pgtt`, `baseline`, or `wild`            |
+| `--level`   | `level03`       | Terrain level used to select the policy          |
+| `--run`     | `0`             | Policy run index                                 |
+| `--stairs`  / `--no-stairs` | from config | Enable or disable stair terrain      |
+| `--vx`      | from config     | Forward speed command (m/s)                      |
+| `--vy`      | from config     | Lateral speed command (m/s)                      |
+| `--yaw`     | from config     | Yaw rate command (rad/s)                         |
 
 ### Real hardware deployment
 ```bash

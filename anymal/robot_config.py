@@ -59,11 +59,11 @@ TRAINING_DEFAULTS = dict(
 
 # ---- Deploy defaults ----
 DEPLOY_DEFAULTS = dict(
-    command=[1.0, 0.4, 0.0],
-    gait_freq=1.,
+    command=[0.5, 0.2, 0.0],
+    gait_freq=1.0,
     policy_path="policies/anymal",
     pert_enable=False,
-    stairs_enabled=False,
+    stairs_enabled=True,
     ros_velocity_scale=[0.5, 0.5, 0.5],
 )
 

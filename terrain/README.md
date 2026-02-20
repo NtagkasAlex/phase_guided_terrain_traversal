@@ -42,10 +42,13 @@ Generates a random stair terrain in `terrain_test_mjx.xml` for evaluation and vi
 python terrain/generator.py --robot anymal test --num_objects 100
 ```
 
-| Argument         | Default | Description                                      |
-|------------------|---------|--------------------------------------------------|
+| Argument         | Default | Description                                          |
+|------------------|---------|------------------------------------------------------|
 | `--num_objects`  | `100`   | Max scene objects (unused slots become placeholders) |
-| `--size`         | `9`     | Size of the terrain grid                          |
+| `--size`         | `9`     | Size of the terrain grid                             |
+| `--step_height`  | `0.08`  | Height of each stair step                            |
+| `--width`        | `0.4`   | Width of each stair step                             |
+| `--num_steps`    | `4`     | Number of stair steps                                |
 
 ## How it works
 

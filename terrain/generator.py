@@ -421,17 +421,8 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
             result_matrix = result_matrix.at[env_id,i,7:].set(box["size"])
     return result_matrix
 
-def random_test_env(num_bodies,size):
-
-
-    # height = np.random.uniform(0.05, 0.15)
-    # width = np.random.uniform(0.15, 0.35)
-    # num_steps = np.random.choice([3, 4, 5, 6])
-    num_steps=4
-    width=0.4
-    step_height=0.08
-    # print(height,width,num_steps)
-    tg = TerrainGenerator(width=width,step_height=step_height,num_stairs=num_steps,render=True)
+def random_test_env(num_bodies, size, step_height=0.08, width=0.4, num_steps=4):
+    tg = TerrainGenerator(width=width, step_height=step_height, num_stairs=num_steps, render=True)
     wave=generate_14(size=size)
     # wave=generate_discrete(size=size)
     grid = create_centered_grid(size, tg.length)
@@ -481,6 +472,9 @@ if __name__ == "__main__":
     p_test = subparsers.add_parser('test', help='Generate a random test terrain (terrain_test_mjx.xml)')
     p_test.add_argument('--num_objects', type=int, default=100)
     p_test.add_argument('--size', type=int, default=9)
+    p_test.add_argument('--step_height', type=float, default=0.08, help='Height of each stair step')
+    p_test.add_argument('--width', type=float, default=0.4, help='Width of each stair step')
+    p_test.add_argument('--num_steps', type=int, default=4, help='Number of stair steps')
 
     args = parser.parse_args()
     _setup_paths(args.robot)
@@ -507,5 +501,5 @@ if __name__ == "__main__":
         print(f"Wrote {tg.count_boxes} placeholder boxes -> {OUTPUT_SCENE_PATH}")
 
     elif args.mode == 'test':
-        random_test_env(args.num_objects, args.size)
+        random_test_env(args.num_objects, args.size, step_height=args.step_height, width=args.width, num_steps=args.num_steps)
         print(f"Wrote random test terrain -> {TEST_SCENE_PATH}")

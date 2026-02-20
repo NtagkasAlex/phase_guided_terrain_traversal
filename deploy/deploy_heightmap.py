@@ -22,6 +22,10 @@ _parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 o
 _parser.add_argument('--method', type=str, default='pgtt', help='Method: pgtt, baseline, or wild')
 _parser.add_argument('--level', type=str, default='level03', help='Terrain level: level03, level07, level10, level13')
 _parser.add_argument('--run', type=int, default=0, help='Run number')
+_parser.add_argument('--stairs', action=argparse.BooleanOptionalAction, default=None, help='Enable stairs terrain (overrides robot config default)')
+_parser.add_argument('--vx', type=float, default=None, help='Forward speed vx (overrides robot config default)')
+_parser.add_argument('--vy', type=float, default=None, help='Lateral speed vy (overrides robot config default)')
+_parser.add_argument('--yaw', type=float, default=None, help='Yaw rate (overrides robot config default)')
 _args, _ = _parser.parse_known_args()
 robot_cfg = robots.get_robot_config(_args.robot)
 consts = robot_cfg
@@ -73,7 +77,13 @@ fixed_pert_angle = -0.4
 _deploy_defaults = robot_cfg.DEPLOY_DEFAULTS
 pert_enable = _deploy_defaults["pert_enable"]
 command=np.array(_deploy_defaults["command"])
-stairs_enabled=_deploy_defaults["stairs_enabled"]
+if _args.vx is not None:
+    command[0] = _args.vx
+if _args.vy is not None:
+    command[1] = _args.vy
+if _args.yaw is not None:
+    command[2] = _args.yaw
+stairs_enabled=_deploy_defaults["stairs_enabled"] if _args.stairs is None else _args.stairs
 gait_freq=_deploy_defaults["gait_freq"]
 ros_enabled=False
 render=True
