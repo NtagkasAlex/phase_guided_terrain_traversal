@@ -26,6 +26,7 @@ _parser.add_argument('--stairs', action=argparse.BooleanOptionalAction, default=
 _parser.add_argument('--vx', type=float, default=None, help='Forward speed vx (overrides robot config default)')
 _parser.add_argument('--vy', type=float, default=None, help='Lateral speed vy (overrides robot config default)')
 _parser.add_argument('--yaw', type=float, default=None, help='Yaw rate (overrides robot config default)')
+_parser.add_argument('--freq', type=float, default=None, help='Gait frequency in Hz (overrides robot config default)')
 _args, _ = _parser.parse_known_args()
 robot_cfg = robots.get_robot_config(_args.robot)
 consts = robot_cfg
@@ -84,7 +85,7 @@ if _args.vy is not None:
 if _args.yaw is not None:
     command[2] = _args.yaw
 stairs_enabled=_deploy_defaults["stairs_enabled"] if _args.stairs is None else _args.stairs
-gait_freq=_deploy_defaults["gait_freq"]
+gait_freq=_deploy_defaults["gait_freq"] if _args.freq is None else _args.freq
 ros_enabled=False
 render=True
 feet_scans=False
