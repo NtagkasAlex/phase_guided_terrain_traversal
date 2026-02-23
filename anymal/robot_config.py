@@ -130,7 +130,7 @@ def default_config() -> config_dict.ConfigDict:
             tracking_sigma=0.25,
             swing_height=-0.35,
             base_feet_distance=-0.5,
-            phase_sigma=0.2,
+            phase_sigma=0.05,
         ),
         pert_config=config_dict.create(
             enable=False,
