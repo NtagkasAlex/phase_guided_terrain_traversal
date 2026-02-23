@@ -77,15 +77,16 @@ IMPL = "warp"
 NCONMAX = 128 * TRAINING_DEFAULTS["num_envs"]
 NJMAX = 512
 
-
+KP=70
+KD=2
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
         ctrl_dt=0.02,
         sim_dt=0.005,
         episode_length=1000,
         vel_percentage=0.65,
-        Kp=100.0,
-        Kd=1.,
+        Kp=KP,
+        Kd=KD,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,
@@ -110,7 +111,7 @@ def default_config() -> config_dict.ConfigDict:
                 ang_vel_xy=-0.05,
                 orientation=-0.,
                 dof_pos_limits=-0.0,
-                pose=-0.5,
+                pose=-2,
                 termination=-1.0,
                 stand_still=-0.0,
                 torques=-0.000002,
@@ -120,7 +121,7 @@ def default_config() -> config_dict.ConfigDict:
                 feet_height=-0.,
                 feet_slip=-0.,
                 feet_air_time=0.,
-                feet_phase=0.1,
+                feet_phase=1.0,
                 feet_swing=0.,
                 body_height=-0.,
                 contact=0.,
@@ -129,7 +130,7 @@ def default_config() -> config_dict.ConfigDict:
             tracking_sigma=0.25,
             swing_height=-0.35,
             base_feet_distance=-0.5,
-            phase_sigma=0.05,
+            phase_sigma=0.2,
         ),
         pert_config=config_dict.create(
             enable=False,
@@ -157,8 +158,8 @@ def baseline_config() -> config_dict.ConfigDict:
         sim_dt=0.005,
         vel_percentage=0.65,
         episode_length=1000,
-        Kp=100.0,
-        Kd=1.0,
+        Kp=KP,
+        Kd=KD0,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,
@@ -230,8 +231,8 @@ def wild_config() -> config_dict.ConfigDict:
         sim_dt=0.005,
         vel_percentage=0.65,
         episode_length=1000,
-        Kp=100.0,
-        Kd=1.0,
+        Kp=KP,
+        Kd=KD0,
         action_repeat=1,
         action_scale=0.5,
         history_len=2,

@@ -45,23 +45,32 @@ from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 
 import robots.gait as gait
+import argparse
 
 num_heightscans=13
 num_widthscans=9
 
-mode="pgtt"
-# mode="baseline"
+_parser = argparse.ArgumentParser(description="Deploy real robot")
+_parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
+_parser.add_argument('--method', type=str, default='pgtt', help='Method: pgtt, baseline, or wild')
+_parser.add_argument('--level', type=str, default='level03', help='Terrain level: level03, level07, etc.')
+_parser.add_argument('--run', type=int, default=0, help='Run number')
+_parser.add_argument('--command_type', type=str, default='controller', help='Command source: controller or fixed')
+_parser.add_argument('--vx', type=float, default=0.2, help='Forward speed when using fixed command')
+_parser.add_argument('--vy', type=float, default=0.0, help='Lateral speed when using fixed command')
+_parser.add_argument('--yaw', type=float, default=0.0, help='Yaw rate when using fixed command')
+_parser.add_argument('--network', type=str, default=None, help='Network interface for ChannelFactoryInitialize')
+_args, _ = _parser.parse_known_args()
 
-command_type="controller"
-# command_type="fixed"
-
-filename="policy53"
+mode = _args.method
+command_type = _args.command_type
+filename = f"policies/policy_{_args.robot}_{_args.method}_{_args.level}_run{_args.run}"
+cmd_fixed = np.array([_args.vx, _args.vy, _args.yaw])
 
 PHASES=np.array([0.,np.pi,np.pi,0.])
 ctrl_dt=0.02
 pd_dt=0.02
 freq=2.
-cmd_x=0.2
 reorder=[3,4,5,0,1,2,9,10,11,6,7,8]
 PosStopF = 2.146e9
 VelStopF = 16000.0
@@ -377,7 +386,7 @@ class Custom():
             self.cmd[1] = cmd_scale[1]*self.remote_controller.lx * -1
             self.cmd[2] = cmd_scale[2]*self.remote_controller.rx * -1
         else:
-            self.cmd=np.array([cmd_x,0,0.])
+            self.cmd=cmd_fixed.copy()
         num_actions = 12
         if mode=="baseline":
             obs = np.hstack([
@@ -421,8 +430,8 @@ if __name__ == '__main__':
     print("WARNING: Please ensure there are no obstacles around the robot while running this example.")
     input("Press Enter to continue...")
 
-    if len(sys.argv)>1:
-        ChannelFactoryInitialize(0, sys.argv[1])
+    if _args.network is not None:
+        ChannelFactoryInitialize(0, _args.network)
     else:
         ChannelFactoryInitialize(0)
 

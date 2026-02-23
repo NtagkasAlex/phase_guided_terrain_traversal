@@ -157,7 +157,7 @@ class Joystick_Base(robot_base.RobotEnv):
 
     obs = self._get_obs(data, info)
     reward, done = jp.zeros(2)
-    self._weights=np.array([1.0,0.1,0.1]*4)
+    self._weights=np.array([1.0,0.3,0.5]*4)
     self.init_feet_pos.at[:].set(self.get_feet_pos(data))
     return mjx_env.State(data, obs, reward, done, metrics, info)
 

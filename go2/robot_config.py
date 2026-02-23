@@ -120,7 +120,7 @@ def default_config() -> config_dict.ConfigDict:
                 feet_height=-0.,
                 feet_slip=-0.,
                 feet_air_time=0.,
-                feet_phase=0.1,
+                feet_phase=1.0,
                 feet_swing=0.,
                 body_height=-0.,
                 contact=0.,

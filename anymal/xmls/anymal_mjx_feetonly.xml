@@ -5,7 +5,7 @@
     <numeric data="4" name="max_contact_points"/>  
     <numeric data="25" name="max_geom_pairs"/> 
  </custom> 
- <option cone="pyramidal" impratio="100" iterations="5" ls_iterations="5" timestep="0.005" integrator="Euler">
+  <option iterations="5" ls_iterations="5" timestep="0.004" integrator="Euler">
     <flag eulerdamp="disable"/>
   </option>
 
