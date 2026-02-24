@@ -77,8 +77,8 @@ IMPL = "warp"
 NCONMAX = 128 * TRAINING_DEFAULTS["num_envs"]
 NJMAX = 512
 
-KP=70
-KD=2
+KP=100
+KD=1
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
         ctrl_dt=0.02,
@@ -114,9 +114,9 @@ def default_config() -> config_dict.ConfigDict:
                 pose=-1,
                 termination=-1.0,
                 stand_still=-0.0,
-                torques=-0.000002,
-                action_rate=-0.001,
-                energy=-0.0,
+                torques=-0.0002,
+                action_rate=-0.01,
+                energy=-0.001,
                 feet_clearance=-0.,
                 feet_height=-0.,
                 feet_slip=-0.,
