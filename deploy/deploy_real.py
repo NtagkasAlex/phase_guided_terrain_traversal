@@ -47,7 +47,7 @@ from std_msgs.msg import Header
 import robots.gait as gait
 import argparse
 
-num_heightscans=13
+num_heightscans=11
 num_widthscans=9
 
 _parser = argparse.ArgumentParser(description="Deploy real robot")
@@ -144,7 +144,7 @@ class Custom():
 
     def __init__(self):
         self.Kp = 60.0 #60.0 #20 #40
-        self.Kd = 2. #2.0   #0.5  #1 
+        self.Kd = 3. #2.0   #0.5  #1 
         self.time_consume = 0
         self.rate_count = 0
         self.sin_count = 0
@@ -419,7 +419,7 @@ class Custom():
         self.action = self.policy_network(obs_tensor).detach().numpy().squeeze()
         if mode=="wild":
                 # print(self.phase)
-                oscilator_angles = gait.joint_trajectory_np(self.phase,-0.2,-0.3)
+                oscilator_angles = gait.joint_trajectory(self.phase,-0.2,-0.3)
                 target_dof_pos = oscilator_angles + self.action * self.action_scale
         else:
                 target_dof_pos = self.default_pos + self.action * self.action_scale
