@@ -315,7 +315,7 @@ def generate_discrete(size):
     wave = wfc.wave.wave
     
     return wave
-def generate_14(size):
+def generate_14(size, test=False):
     left=(-1,0)
     right=(1,0)
     up=(0,1)
@@ -345,7 +345,7 @@ def generate_14(size):
     for y in range(1, size - 1):
         wfc.init((0, y), outer)          # Left column
         wfc.init((size - 1, y), outer)   # Right column
-    if np.random.random()>0.5:
+    if test or np.random.random()>0.5:
         wfc.init((size//2,size//2),0)
     else:
         wfc.init((size//2,size//2),1)
@@ -402,7 +402,7 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
     result_matrix = result_matrix.at[..., 3:7].set(jnp.array([1,0,0,0]))
     for env_id in range(num_envs):
         height = np.random.uniform(height_min,height_max)
-        width = np.random.uniform(0.3, 0.45)
+        width = np.random.uniform(0.25, 0.4)
         num_steps = np.random.choice([1,2,3,4])
 
         tg = TerrainGenerator(width=width, step_height=height, num_stairs=num_steps, render=False)
@@ -422,7 +422,7 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
 
 def random_test_env(num_bodies, size, step_height=0.08, width=0.4, num_steps=4):
     tg = TerrainGenerator(width=width, step_height=step_height, num_stairs=num_steps, render=True)
-    wave=generate_14(size=size)
+    wave=generate_14(size=size,test=True)
     # wave=generate_discrete(size=size)
     grid = create_centered_grid(size, tg.length)
 
