@@ -342,11 +342,10 @@ def generate_14(size):
         wfc.init((x, size - 1), outer)   # Bottom row
 
     # Left and right columns (excluding corners to avoid duplication)
-    # for y in range(1, size - 1):
-    #     wfc.init((0, y), outer)          # Left column
-    #     wfc.init((size - 1, y), outer)   # Right column
-    if np.random.random()>0.0:
-        
+    for y in range(1, size - 1):
+        wfc.init((0, y), outer)          # Left column
+        wfc.init((size - 1, y), outer)   # Right column
+    if np.random.random()>0.5:
         wfc.init((size//2,size//2),0)
     else:
         wfc.init((size//2,size//2),1)
@@ -404,7 +403,7 @@ def create_random_matrix(num_envs,num_bodies,size,height_min,height_max):
     for env_id in range(num_envs):
         height = np.random.uniform(height_min,height_max)
         width = np.random.uniform(0.3, 0.45)
-        num_steps = np.random.choice([ 1])
+        num_steps = np.random.choice([1,2,3,4])
 
         tg = TerrainGenerator(width=width, step_height=height, num_stairs=num_steps, render=False)
         wave = generate_14(size=size)
@@ -452,35 +451,43 @@ if __name__ == "__main__":
     parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
     subparsers = parser.add_subparsers(dest='mode', required=True)
 
-    # 1) levels — produce all level .npy terrain files
-    p_levels = subparsers.add_parser('levels', help='Generate all level .npy terrain files for DR')
+    # 1) evaluation — produce all level .npy terrain files
+    p_levels = subparsers.add_parser('evaluation', help='Generate all level .npy terrain files for DR')
     p_levels.add_argument('--num_envs', type=int, default=100)
     p_levels.add_argument('--num_objects', type=int, default=100)
-    p_levels.add_argument('--size', type=int, default=9)
+    p_levels.add_argument('--size', type=int, default=5)
     p_levels.add_argument('--num_steps', type=int, default=3)
     p_levels.add_argument('--width', type=float, default=0.1)
     p_levels.add_argument('--step_height', type=float, default=0.15)
 
-    # 2) fill — fill the template scene XML with placeholder boxes
+    # 2) level — produce one terrain file from 0 to a given height
+    p_level = subparsers.add_parser('level', help='Generate a single terrain .npy file with height from 0 to --height')
+    p_level.add_argument('--num_envs', type=int, default=100)
+    p_level.add_argument('--num_objects', type=int, default=100)
+    p_level.add_argument('--size', type=int, default=5)
+    p_level.add_argument('--height', type=float, default=0.1, help='Max step height of the terrain')
+    p_level.add_argument('--height_min', type=float, default=None, help='Min step height (default: height/2)')
+
+    # 4) fill — fill the template scene XML with placeholder boxes
     p_fill = subparsers.add_parser('fill', help='Fill terrain_scene_mjx.xml with placeholder boxes')
     p_fill.add_argument('--num_objects', type=int, default=100)
     p_fill.add_argument('--num_steps', type=int, default=3)
     p_fill.add_argument('--width', type=float, default=0.1)
     p_fill.add_argument('--step_height', type=float, default=0.15)
 
-    # 3) test — create a random test terrain
+    # 5) test — create a random test terrain
     p_test = subparsers.add_parser('test', help='Generate a random test terrain (terrain_test_mjx.xml)')
     p_test.add_argument('--num_objects', type=int, default=100)
     p_test.add_argument('--size', type=int, default=9)
     p_test.add_argument('--step_height', type=float, default=0.08, help='Height of each stair step')
-    p_test.add_argument('--width', type=float, default=0.4, help='Width of each stair step')
-    p_test.add_argument('--num_steps', type=int, default=4, help='Number of stair steps')
+    p_test.add_argument('--width', type=float, default=0.35, help='Width of each stair step')
+    p_test.add_argument('--num_steps', type=int, default=3, help='Number of stair steps')
 
     args = parser.parse_args()
     _setup_paths(args.robot)
     np.set_printoptions(precision=2, suppress=True)
 
-    if args.mode == 'levels':
+    if args.mode == 'evaluation':
         numbers = ["01", "02", "03", "04", "05", "06", "07", "08", "09"]
         for number in numbers:
             value = float("0." + number)
@@ -491,6 +498,13 @@ if __name__ == "__main__":
         res = create_random_matrix(args.num_envs, args.num_objects, args.size, 0.01, 0.06)
         np.save("./terrains/discrete", res)
         print(f"  -> terrains/discrete.npy  shape={res.shape}")
+
+    elif args.mode == 'level':
+        height_min = args.height_min if args.height_min is not None else args.height / 2
+        res = create_random_matrix(args.num_envs, args.num_objects, args.size, height_min, args.height)
+        level_name = f"level{round(args.height * 100):02d}"
+        np.save(f"./terrains/{level_name}", res)
+        print(f"  -> terrains/{level_name}.npy  shape={res.shape}")
 
     elif args.mode == 'fill':
         tg = TerrainGenerator(width=args.width, step_height=args.step_height,
