@@ -69,12 +69,13 @@ cmd_fixed = np.array([_args.vx, _args.vy, _args.yaw])
 
 PHASES=np.array([0.,np.pi,np.pi,0.])
 ctrl_dt=0.02
-pd_dt=0.02
+pd_dt=0.005
+_policy_decimation = round(ctrl_dt / pd_dt)
 freq=2.
 reorder=[3,4,5,0,1,2,9,10,11,6,7,8]
 PosStopF = 2.146e9
 VelStopF = 16000.0
-cmd_scale=np.array([0.3,0.3,0.8])
+cmd_scale=np.array([0.5,0.5,0.8])
 
 def read_points(
         cloud: PointCloud2,
@@ -193,6 +194,8 @@ class Custom():
         # self.obs=np.zeros(120)
         self.remote_controller = RemoteController()
         self.action=np.zeros(12)
+        self.pd_counter=0
+        self.policy_target=np.array(self._targetPos_2)
         self.default_pos=np.array(self._targetPos_2)
         self.action_scale=0.5
         self.policy_network=pn.policy_net(policy_file=filename)
@@ -325,9 +328,11 @@ class Custom():
         if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and (self.percent_4 < 1):
             self.percent_4 += 1.0 / self.duration_4
             self.percent_4 = min(self.percent_4, 1)
-            policy_target=self.run_policy()
+            if self.pd_counter % _policy_decimation == 0:
+                self.policy_target = self.run_policy()
+            self.pd_counter += 1
             for i in range(12):
-                self.low_cmd.motor_cmd[i].q = policy_target[i]
+                self.low_cmd.motor_cmd[i].q = self.policy_target[i]
                 self.low_cmd.motor_cmd[i].dq = 0
                 self.low_cmd.motor_cmd[i].kp = self.Kp
                 self.low_cmd.motor_cmd[i].kd = self.Kd
@@ -381,6 +386,7 @@ class Custom():
         phase_obs = np.concatenate([cos, sin])
         z_values=self.heightmap.ravel()
         z_normal=z_values-np.min(z_values)
+        z_normal*=1.5
         if command_type=="controller":
             self.cmd[0] = cmd_scale[0]*self.remote_controller.ly
             self.cmd[1] = cmd_scale[1]*self.remote_controller.lx * -1

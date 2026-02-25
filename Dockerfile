@@ -44,9 +44,9 @@ RUN apt-get update && \
       ros-humble-nav2-costmap-2d \
       ros-humble-filters \
       ros-humble-grid-map \
+      ros-humble-rmw-cyclonedds-cpp \
+      ros-humble-cyclonedds \
     && rm -rf /var/lib/apt/lists/*
-
-
 
     
 
@@ -54,7 +54,7 @@ RUN apt-get update && \
 #ENV PYTHONPATH=/opt/ros/humble/lib/python3/dist-packages:${PYTHONPATH:-}
 RUN source /opt/ros/humble/setup.bash
 
-
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LIBGL_ALWAYS_SOFTWARE=1
 ENV MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
