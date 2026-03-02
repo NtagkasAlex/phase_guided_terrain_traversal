@@ -111,7 +111,7 @@ def default_config() -> config_dict.ConfigDict:
                 ang_vel_xy=-0.05,
                 orientation=-0.,
                 dof_pos_limits=-0.0,
-                pose=-1,
+                pose=-0.1,
                 termination=-1.0,
                 stand_still=-0.0,
                 torques=-0.0002,

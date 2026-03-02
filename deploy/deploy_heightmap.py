@@ -93,7 +93,7 @@ feet_scans=False
 mode=_args.method
 filename=f"policies/policy_{_args.robot}_{_args.method}_{_args.level}_run{_args.run}"
 
-total_time=50
+total_time=5
 
 
 class Controller:
@@ -363,6 +363,8 @@ if render:
 start_time = time.time()
 
 trajectory=[]
+joint_angle_log = []
+time_log = []
 while data.time <total_time:#config_dict.episode_length*sim_dt:
     if pert_enable:
         maybe_apply_perturbation()
@@ -377,6 +379,8 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
     yaw = np.arctan2(imu_xmat[1, 0], imu_xmat[0, 0])
     xyz=data.qpos[:3]+np.array([0,0,0.2])
     if not paused:
+        joint_angle_log.append(data.qpos[7:10].copy())
+        time_log.append(data.time)
         # print(data.time)
         mujoco.mj_step(model, data)
         # heightscan[...,2]=z_normal.reshape((9,9))
@@ -415,3 +419,17 @@ while data.time <total_time:#config_dict.episode_length*sim_dt:
             
             viewer.sync()
     time.sleep(0.002)
+
+joint_angle_log = np.array(joint_angle_log)
+time_log = np.array(time_log)
+
+fig, axes = plt.subplots(3, 1, figsize=(10, 6), sharex=True)
+labels = ["Joint 0", "Joint 1", "Joint 2"]
+for i, (ax, label) in enumerate(zip(axes, labels)):
+    ax.plot(time_log, joint_angle_log[:, i])
+    ax.set_ylabel(f"{label} (rad)")
+    ax.grid(True)
+axes[-1].set_xlabel("Time (s)")
+fig.suptitle("Joint Angles 0, 1, 2")
+plt.tight_layout()
+plt.show()
