@@ -100,7 +100,8 @@ def sweep_discrete(method: str, ckpt_folder: str):
 
 def main():
     METHODS = ["pgtt", "baseline", "wild"]
-    LEVELS = ["level03", "level07", "level10", "level13"]
+    #LEVELS = ["level03", "level07", "level10", "level13"]
+    LEVELS = ["level10"]
     RUN = _eval_args.run
     eval_type = _eval_args.eval_type
     height_min = _eval_args.height_min
