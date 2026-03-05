@@ -45,7 +45,7 @@ def progress_eval(num_steps, metrics,env_cfg):
 
 
 
-def sweep(method: str, ckpt_folder: str, ckpt_id: int, height_cm: int):
+def sweep(method: str, ckpt_folder: str, ckpt_id: int, height_cm: int, run_id: int = 0):
     eval_metrics_all.clear()
 
     terrain = f"terrains/level{height_cm:02d}.npy"
@@ -64,14 +64,14 @@ def sweep(method: str, ckpt_folder: str, ckpt_id: int, height_cm: int):
         num_evals=1,
         num_eval_envs=1000,
         entropy_cost=0.01,
-        index=f"_{ROBOT}_{method}_h{height_cm:02d}_ckpt{ckpt_id}",
+        index=f"_{ROBOT}_{method}_h{height_cm:02d}_ckpt{ckpt_id}_run{run_id}",
         eval_flag=True,
     )
     print(f"  [{method}] ckpt {ckpt_id} running on {terrain} …", end="", flush=True)
     run_training(args, progress_eval)
     return copy.deepcopy(eval_metrics_all)
 
-def sweep_discrete(method: str, ckpt_folder: str, ckpt_id: int):
+def sweep_discrete(method: str, ckpt_folder: str, ckpt_id: int, run_id: int = 0):
     eval_metrics_all.clear()
 
     terrain = f"terrains/discrete.npy"
@@ -90,7 +90,7 @@ def sweep_discrete(method: str, ckpt_folder: str, ckpt_id: int):
         num_evals=1,
         num_eval_envs=1000,
         entropy_cost=0.01,
-        index=f"_{ROBOT}_{method}_discrete_ckpt{ckpt_id}",
+        index=f"_{ROBOT}_{method}_discrete_ckpt{ckpt_id}_run{run_id}",
         eval_flag=True,
     )
     print(f"  [{method}] running on {terrain} …", end="", flush=True)
@@ -122,8 +122,8 @@ def main():
         for method, ckpt_list in checkpoints.items():
             for ckpt_idx, ckpt_path in enumerate(ckpt_list):
                 print(f"  [{method}] ckpt {ckpt_idx} on discrete terrain …", end="", flush=True)
-                results = sweep_discrete(method, ckpt_path, ckpt_idx)
-                filename = f"plots/{method}_discrete_ckpt{ckpt_idx}.npy"
+                results = sweep_discrete(method, ckpt_path, ckpt_idx, RUN)
+                filename = f"plots/{ROBOT}_{method}_discrete_ckpt{ckpt_idx}_run{RUN}.npy"
                 np.save(filename, np.array(results, dtype=object))
                 print(f" saved {filename}")
         print("\nDiscrete evaluations complete.")
@@ -133,8 +133,8 @@ def main():
         for method, ckpt_list in checkpoints.items():
             for ckpt_idx, ckpt_path in enumerate(ckpt_list):
                 for height in range(height_min, height_max + 1):
-                    results = sweep(method, ckpt_path, ckpt_idx, height)
-                    filename = f"plots/{method}_dist_ckpt{ckpt_idx}_h{height:02d}.npy"
+                    results = sweep(method, ckpt_path, ckpt_idx, height, RUN)
+                    filename = f"plots/{ROBOT}_{method}_dist_ckpt{ckpt_idx}_h{height:02d}_run{RUN}.npy"
                     np.save(filename, np.array(results, dtype=object))
                     print(f" saved {filename}")
         print("\nStair evaluations complete.")
