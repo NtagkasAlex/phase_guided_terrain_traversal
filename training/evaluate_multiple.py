@@ -98,10 +98,10 @@ def sweep_discrete(method: str, ckpt_folder: str):
     return copy.deepcopy(eval_metrics_all)
 
 def main():
-    # METHODS = ["pgtt", "baseline", "wild"]
-    METHODS = ["baseline"]
+    METHODS = ["pgtt", "baseline", "wild"]
+    # METHODS = ["baseline"]
     #LEVELS = ["level03", "level07", "level10", "level13"]
-    LEVELS = ["level07"]
+    LEVELS = ["level10"]
     RUN = _eval_args.run
     eval_type = _eval_args.eval_type
     height_min = _eval_args.height_min

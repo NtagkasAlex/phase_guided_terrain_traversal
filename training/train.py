@@ -224,6 +224,8 @@ def run_training(args,progress_fn):
 
   def policy_params_fn(current_step, make_policy, params):
     del make_policy  # Unused.
+    if args.eval_flag:
+      return
     orbax_checkpointer = ocp.PyTreeCheckpointer()
     save_args = orbax_utils.save_args_from_target(params)
     path = ckpt_path / f"{current_step}"
