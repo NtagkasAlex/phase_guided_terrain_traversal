@@ -64,6 +64,7 @@ def sweep(method: str, ckpt_folder: str, ckpt_id: int, height_cm: int):
         num_timesteps=1,
         num_evals=1,
         num_eval_envs=1000,
+        entropy_cost=0.01,
         index="eval",
         eval_flag=True,
     )
@@ -89,6 +90,7 @@ def sweep_discrete(method: str, ckpt_folder: str):
         num_timesteps=1,
         num_evals=1,
         num_eval_envs=1000,
+        entropy_cost=0.01,
         index="eval",
         eval_flag=True,
     )
