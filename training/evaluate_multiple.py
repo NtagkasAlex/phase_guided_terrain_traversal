@@ -106,7 +106,7 @@ def main():
 
     checkpoints = {
         method: [
-            f"checks_stairs/checkpoint_{method}_{level}_run{RUN}"
+            f"checks_stairs/checkpoint_{ROBOT}_{method}_{level}_run{RUN}"
             for level in LEVELS
         ]
         for method in METHODS

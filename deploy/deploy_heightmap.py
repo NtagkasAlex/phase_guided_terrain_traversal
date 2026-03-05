@@ -93,7 +93,7 @@ feet_scans=False
 mode=_args.method
 filename=f"policies/policy_{_args.robot}_{_args.method}_{_args.level}_run{_args.run}"
 
-total_time=5
+total_time=50
 
 
 class Controller:
