@@ -82,7 +82,7 @@ KD=1
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
         ctrl_dt=0.02,
-        sim_dt=0.005,
+        sim_dt=0.003,
         episode_length=1000,
         vel_percentage=0.65,
         Kp=KP,
@@ -124,7 +124,7 @@ def default_config() -> config_dict.ConfigDict:
                 feet_phase=1.0,
                 feet_swing=0.,
                 body_height=-0.,
-                contact=0.,
+                contact=0.2,
                 center=-0.,
             ),
             tracking_sigma=0.25,
