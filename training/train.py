@@ -265,6 +265,7 @@ def run_training(args,progress_fn):
     )
   print(f"time to jit: {times[1] - times[0]}")
   print(f"time to train: {times[-1] - times[1]}")
+  os.makedirs(f"./plots/{args.method}", exist_ok=True)
   model.save_params(f"policies/policy_{args.index}",params)
   np.save(f"./plots/{args.method}/mean{args.index}",y_data)
   np.save(f"./plots/{args.method}/std{args.index}",y_dataerr)

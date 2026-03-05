@@ -22,7 +22,6 @@ eval_metrics_all=[]
 def progress_eval(num_steps, metrics,env_cfg):
     times.append(datetime.now())
     x_data.append(num_steps)
-
     y_data.append(metrics["eval/episode_reward"])
     y_dataerr.append(metrics["eval/episode_reward_std"])
 
@@ -30,9 +29,9 @@ def progress_eval(num_steps, metrics,env_cfg):
     ang_tracking=metrics["eval/episode_reward/tracking_ang_vel"]
     xy_ang_vel=metrics["eval/episode_reward/ang_vel_xy"]/env_cfg.reward_config.scales.ang_vel_xy
 
-    term_vals=metrics["eval/final_reward/termination"]
-    count = int(jnp.sum(jnp.abs(term_vals) < 0.5))
-    survival_rate = count / 1000
+    term_mean = float(metrics["eval/episode_reward/termination"])
+    term_scale = float(env_cfg.reward_config.scales.termination)
+    survival_rate = 1.0 + term_mean / abs(term_scale)
     energy = metrics["eval/episode_reward/torques"]/ env_cfg.reward_config.scales.torques
 
     eval_metrics_all.append({
@@ -99,9 +98,10 @@ def sweep_discrete(method: str, ckpt_folder: str):
     return copy.deepcopy(eval_metrics_all)
 
 def main():
-    METHODS = ["pgtt", "baseline", "wild"]
+    # METHODS = ["pgtt", "baseline", "wild"]
+    METHODS = ["baseline"]
     #LEVELS = ["level03", "level07", "level10", "level13"]
-    LEVELS = ["level10"]
+    LEVELS = ["level07"]
     RUN = _eval_args.run
     eval_type = _eval_args.eval_type
     height_min = _eval_args.height_min
