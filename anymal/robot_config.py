@@ -82,7 +82,7 @@ KD=1
 def default_config() -> config_dict.ConfigDict:
     return config_dict.create(
         ctrl_dt=0.02,
-        sim_dt=0.003,
+        sim_dt=0.005,
         episode_length=1000,
         vel_percentage=0.65,
         Kp=KP,

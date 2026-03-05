@@ -5,7 +5,7 @@
     <numeric data="4" name="max_contact_points"/>  
     <numeric data="25" name="max_geom_pairs"/> 
  </custom> 
-  <option iterations="10" ls_iterations="10" timestep="0.004" integrator="Euler">
+  <option iterations="5" ls_iterations="5" timestep="0.004" integrator="Euler">
     <flag eulerdamp="disable"/>
   </option>
 
@@ -22,7 +22,7 @@
       <default class="collision">
          <geom group="3"/>
         <default class="foot">
-          <geom type="sphere" size="0.03" pos="0 0 0.02325" contype="1" conaffinity="2" />
+          <geom type="sphere" size="0.03" pos="0 0 0.02325" solimp="0.9 .95 0.023" contype="1" conaffinity="2" />
         </default>
       </default>
       <default class="affine">
