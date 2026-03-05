@@ -111,7 +111,7 @@ def default_config() -> config_dict.ConfigDict:
                 ang_vel_xy=-0.05,
                 orientation=-0.,
                 dof_pos_limits=-0.0,
-                pose=-0.1,
+                pose=-1.,
                 termination=-1.0,
                 stand_still=-0.0,
                 torques=-0.0002,
@@ -130,7 +130,7 @@ def default_config() -> config_dict.ConfigDict:
             tracking_sigma=0.25,
             swing_height=-0.35,
             base_feet_distance=-0.5,
-            phase_sigma=0.07,
+            phase_sigma=0.04,
         ),
         pert_config=config_dict.create(
             enable=False,

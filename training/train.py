@@ -295,7 +295,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size for PPO (default: from robot config)')
     parser.add_argument('--discount', type=float, default=0.97, help='Discount factor')
     parser.add_argument('--learning_rate', type=float, default=3e-4, help='Learning rate')
-    parser.add_argument('--entropy_cost', type=float, default=1e-2, help='Entropy cost')
+    parser.add_argument('--entropy_cost', type=float, default=0.01, help='Entropy cost')
     parser.add_argument('--num_minibatches', type=int, default=None, help='Number of minibatches (default: from robot config)')
     parser.add_argument('--num_timesteps', type=int, default=200_000_000, help='Total number of timesteps')
     parser.add_argument('--num_evals', type=int, default=31, help='Number of evaluations')
