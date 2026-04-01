@@ -228,7 +228,7 @@ Default deployment parameters (command velocity, gait frequency, policy path, pe
 
 ### Real hardware deployment
 ```bash
-python deploy/deploy_real.py
+python -m deploy.deploy_real
 ```
 Requires Unitree SDK2 and a connected Go2 robot. Uses ROS2 for the perception pipeline.
 
@@ -250,29 +250,14 @@ Requires Unitree SDK2 and a connected Go2 robot. Uses ROS2 for the perception pi
 4. All training, deployment, and terrain scripts will work with `--robot your_robot`.
 
 ## Perception pipeline using docker
-### Setup
-```bash
-docker volume create ros2_ws_build
-docker volume create ros2_ws_install
-```
 Build:
 ```bash
 docker build -t ros2-humble-dev .
 ```
-Run:
-```bash
-docker run -it --rm   -e DISPLAY=$DISPLAY --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
-```
-For the first time:
-```bash
-source /opt/ros/humble/setup.bash
-cd ros_ws
-colcon build --merge-install --install-base /root/ros_ws/install --symlink-install
-```
 ### Running the pipeline
 Make sure ``` /utlidar/cloud ``` and ``` /utlidar/imu ``` topics are providing data.
 ```bash
-docker run -it --rm   -e DISPLAY=$DISPLAY   --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v ros2_ws_build:/root/ros_ws/build   -v ros2_ws_install:/root/ros_ws/install   ros2-humble-dev
+docker run -it --rm   -e DISPLAY=$DISPLAY   --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw ros2-humble-dev
 ```
 Inside container:
 ```bash

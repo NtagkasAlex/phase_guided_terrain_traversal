@@ -6,7 +6,7 @@ LIO_PID=$!
 
 
 cd ../ros_ws
-colcon build --packages-select elevation_mapping grid_map_filter_node #--cmake-args -DCMAKE_BUILD_TYPE=Release 
+colcon build --merge-install --packages-select elevation_mapping grid_map_filter_node #--cmake-args -DCMAKE_BUILD_TYPE=Release 
 source install/setup.bash
 # Wait for all processes to finish
 ros2 launch elevation_mapping elevationMapping_launch.py &

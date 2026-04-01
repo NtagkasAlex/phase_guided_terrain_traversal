@@ -69,7 +69,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     
 WORKDIR /root/
 COPY . /root/
-#ENTRYPOINT ["/bin/bash", "-c", "cd /root/ros_ws && rm -rf build install log || true && #colcon build && exec bash"]
 
+RUN source /opt/ros/humble/setup.bash && \
+    cd /root/ros_ws && \
+    colcon build --merge-install
+
+RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
+    echo "source /root/ros_ws/install/setup.bash" >> /root/.bashrc
+    
+RUN printf '%s\n' \
+    '#!/bin/bash' \
+    'set -e' \
+    'source /opt/ros/humble/setup.bash' \
+    'source /root/ros_ws/install/setup.bash' \
+    'exec "$@"' \
+    > /ros_entrypoint.sh && chmod +x /ros_entrypoint.sh
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
