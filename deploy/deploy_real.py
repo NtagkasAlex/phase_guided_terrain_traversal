@@ -204,6 +204,8 @@ class Custom():
         # self.lin_vel=np.zeros(3)
         self.heightmap = np.full((num_heightscans, num_widthscans), 0.0)
         self.emergency=False
+        self.policy_armed = False
+        self._arm_msg_printed = False
     def Init(self):
         self.InitLowCmd()
 
@@ -325,7 +327,22 @@ class Custom():
                 self.low_cmd.motor_cmd[i].kd = self.Kd
                 self.low_cmd.motor_cmd[i].tau = 0
 
-        if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and (self.percent_4 < 1):
+        if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and not self.policy_armed and not self.emergency:
+            if self.remote_controller.button[KeyMap.B] == 1:
+                self.policy_armed = True
+                print("Policy armed! Starting execution...")
+            else:
+                if not self._arm_msg_printed:
+                    print("Robot standing. Press B to start policy execution. Press A to sit down.")
+                    self._arm_msg_printed = True
+                for i in range(12):
+                    self.low_cmd.motor_cmd[i].q = self._targetPos_2[i]
+                    self.low_cmd.motor_cmd[i].dq = 0
+                    self.low_cmd.motor_cmd[i].kp = self.Kp
+                    self.low_cmd.motor_cmd[i].kd = self.Kd
+                    self.low_cmd.motor_cmd[i].tau = 0
+
+        if (self.percent_1 == 1) and (self.percent_2 == 1) and (self.percent_3 == 1) and self.policy_armed and (self.percent_4 < 1):
             self.percent_4 += 1.0 / self.duration_4
             self.percent_4 = min(self.percent_4, 1)
             if self.pd_counter % _policy_decimation == 0:
