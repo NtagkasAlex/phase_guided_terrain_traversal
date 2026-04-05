@@ -227,10 +227,59 @@ Default deployment parameters (command velocity, gait frequency, policy path, pe
 | `--yaw`     | from config     | Yaw rate command (rad/s)                         |
 
 ### Real hardware deployment
+
+Two terminals are required:
+
+**Terminal 1 — Perception pipeline (Docker)**
+
+Make sure `/utlidar/cloud` and `/utlidar/imu` topics are providing data, then start the elevation mapping container (see [Perception pipeline](#perception-pipeline-using-docker)):
 ```bash
-python -m deploy.deploy_real
+docker run -it --rm \
+  -e DISPLAY=$DISPLAY \
+  --net=host \
+  -e LIBGL_ALWAYS_SOFTWARE=1 \
+  -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  ros2-humble-dev
 ```
-Requires Unitree SDK2 and a connected Go2 robot. Uses ROS2 for the perception pipeline.
+Inside the container(only when you actually want to start the heightmap and the robot is in stand mode):
+```bash
+cd ros_scripts
+chmod +x run_elevation.sh
+./run_elevation.sh
+```
+An RViz window should appear showing the gridmap and scan points. Leave this running.
+
+**Terminal 2 — Policy (conda env `pgtt`)**
+
+```bash
+conda activate pgtt
+
+# Deploy with controller (joystick) commands (default)
+python -m deploy.deploy_real --robot go2 --method pgtt --level level03 --run 0
+
+# Deploy with fixed velocity commands
+python -m deploy.deploy_real --robot go2 --method pgtt --level level03 --run 0 \
+    --command_type fixed --vx 0.2 --vy 0.0 --yaw 0.0
+```
+
+| Argument         | Default        | Description                                              |
+|------------------|----------------|----------------------------------------------------------|
+| `--robot`        | `go2`          | Robot: `go2` or `anymal`                                 |
+| `--method`       | `pgtt`         | Method: `pgtt`, `baseline`, or `wild`                    |
+| `--level`        | `level03`      | Terrain level used to select the policy checkpoint       |
+| `--run`          | `0`            | Policy run index                                         |
+| `--command_type` | `controller`   | Command source: `controller` (joystick) or `fixed`       |
+| `--vx`           | `0.2`          | Forward speed when using `fixed` command (m/s)           |
+| `--vy`           | `0.0`          | Lateral speed when using `fixed` command (m/s)           |
+| `--yaw`          | `0.0`          | Yaw rate when using `fixed` command (rad/s)              |
+
+**Startup sequence:**
+1. Press **Enter** in Terminal 2 to confirm and begin.
+2. The robot automatically stands up over ~7 seconds.
+3. Once fully standing, the terminal prints `"Press B to start policy execution."`.Switch to Terminal 1 (Docker) and run `./run_elevation.sh`. Wait for RViz to show a stable, drift-free heightmap with correct ground estimation.
+4. Press **B** on the controller to start the policy.
+5. Press **A** at any time to immediately stop the policy and sit the robot down safely.
 
 ## Adding a New Robot
 
@@ -250,22 +299,11 @@ Requires Unitree SDK2 and a connected Go2 robot. Uses ROS2 for the perception pi
 4. All training, deployment, and terrain scripts will work with `--robot your_robot`.
 
 ## Perception pipeline using docker
-Build:
+Build the image once:
 ```bash
 docker build -t ros2-humble-dev .
 ```
-### Running the pipeline
-Make sure ``` /utlidar/cloud ``` and ``` /utlidar/imu ``` topics are providing data.
-```bash
-docker run -it --rm   -e DISPLAY=$DISPLAY   --net=host -e LIBGL_ALWAYS_SOFTWARE=1   -e MESA_LOADER_DRIVER_OVERRIDE=llvmpipe   -v /tmp/.X11-unix:/tmp/.X11-unix:rw ros2-humble-dev
-```
-Inside container:
-```bash
-cd ros_scripts
-chmod +x run_elevation.sh
-./run_elevation.sh
-```
-An rviz window should show up, showing the gridmap and the scan dots.
+Running instructions are part of the [Real hardware deployment](#real-hardware-deployment) two-terminal setup above.
 
 ## Citation
 ```
