@@ -305,15 +305,3 @@ docker build -t ros2-humble-dev .
 ```
 Running instructions are part of the [Real hardware deployment](#real-hardware-deployment) two-terminal setup above.
 
-## Citation
-```
-@misc{ntagkas2025pgttphaseguidedterraintraversal,
-      title={PGTT: Phase-Guided Terrain Traversal for Perceptive Legged Locomotion},
-      author={Alexandros Ntagkas and Chairi Kiourt and Konstantinos Chatzilygeroudis},
-      year={2025},
-      eprint={2510.18348},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={https://arxiv.org/abs/2510.18348},
-}
-```
