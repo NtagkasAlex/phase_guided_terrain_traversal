@@ -23,11 +23,6 @@ from deploy.common.remote_controller import RemoteController, KeyMap
 import deploy.policy_net as pn
 # from sensor_msgs_py import point_cloud2
 # from sensor_msgs.msg import PointCloud2
-import sensor_msgs_py.point_cloud2 as pc2
-from sensor_msgs.msg import PointCloud2, PointField
-import std_msgs.msg
-from builtin_interfaces.msg import Time  # This is the proper type
-from std_msgs.msg import Header
 import copy
 import array
 from collections import namedtuple
@@ -38,11 +33,36 @@ import numpy as np
 try:
     from numpy.lib.recfunctions import (structured_to_unstructured, unstructured_to_structured)
 except ImportError:
-    from sensor_msgs_py.numpy_compat import (structured_to_unstructured,
-                                             unstructured_to_structured)
+    pass
 
-from sensor_msgs.msg import PointCloud2, PointField
-from std_msgs.msg import Header
+_DATATYPES = {
+    1: np.dtype(np.int8),
+    2: np.dtype(np.uint8),
+    3: np.dtype(np.int16),
+    4: np.dtype(np.uint16),
+    5: np.dtype(np.int32),
+    6: np.dtype(np.uint32),
+    7: np.dtype(np.float32),
+    8: np.dtype(np.float64),
+}
+_DUMMY_FIELD_PREFIX = 'unnamed_field'
+
+
+def dtype_from_fields(fields, point_step=None):
+    field_names, field_offsets, field_datatypes = [], [], []
+    for i, field in enumerate(fields):
+        datatype = _DATATYPES[field.datatype]
+        name = field.name if field.name else f'{_DUMMY_FIELD_PREFIX}_{i}'
+        assert field.count > 0
+        for a in range(field.count):
+            subfield_name = f'{name}_{a}' if field.count > 1 else name
+            field_names.append(subfield_name)
+            field_offsets.append(field.offset + a * datatype.itemsize)
+            field_datatypes.append(datatype.str)
+    dtype_dict = {'names': field_names, 'formats': field_datatypes, 'offsets': field_offsets}
+    if point_step is not None:
+        dtype_dict['itemsize'] = point_step
+    return np.dtype(dtype_dict)
 
 import robots.gait as gait
 import argparse
@@ -78,7 +98,7 @@ VelStopF = 16000.0
 cmd_scale=np.array([0.5,0.5,0.8])
 
 def read_points(
-        cloud: PointCloud2,
+        cloud,
         field_names: Optional[List[str]] = None,
         skip_nans: bool = False,
         uvs: Optional[Iterable] = None,
@@ -99,7 +119,7 @@ def read_points(
 
     points = np.ndarray(
         shape=(cloud.width * cloud.height, ),
-        dtype=pc2.dtype_from_fields(cloud.fields, point_step=cloud.point_step),
+        dtype=dtype_from_fields(cloud.fields, point_step=cloud.point_step),
         buffer=buffer)
 
 
