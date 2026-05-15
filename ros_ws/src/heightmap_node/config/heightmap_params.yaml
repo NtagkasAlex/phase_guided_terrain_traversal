@@ -6,4 +6,4 @@ heightmap_node:
     num_heightscans: 11
     num_widthscans: 9
     dist_x: 0.1
-    dist_y: 0.05
+    dist_y: 0.1
