@@ -1,9 +1,9 @@
-jax==0.9.0
-jaxlib==0.9.0
-mujoco==3.5.0
-mujoco-mjx==3.5.0
+jax==0.8.0
+jaxlib==0.8.0
+mujoco==3.3.7
+mujoco-mjx==3.3.7
 brax==0.13.0
-playground==0.1.0
+playground==0.0.4
 numpy
 matplotlib
 etils

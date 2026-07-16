@@ -159,7 +159,7 @@ def run_training(args,progress_fn):
   if args.eval_flag:
       env_cfg.command_config.u_max=[0.7,0.7,0.7]
       env_cfg.command_config.u_min=[-0.7,-0.7,-0.7]
-      env_cfg.pert_config.enable=True
+      env_cfg.pert_config.enable=False
   else:
       env_cfg.command_config.u_max=[1.0,1.0,1.0]
       env_cfg.command_config.u_min=[-1.0,-1.0,-1.0]

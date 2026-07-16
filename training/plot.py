@@ -7,19 +7,26 @@ parser.add_argument('--methods', type=str, default='pgtt,ablation_phase,ablation
 parser.add_argument('--ckpt', type=int, default=0)
 parser.add_argument('--height', type=int, default=7, help='Stair height (cm) used in the eval sweep')
 parser.add_argument('--run', type=int, default=0)
+parser.add_argument('--discrete', action='store_true', help='Read discrete-terrain eval results instead of the stair-height sweep')
 args = parser.parse_args()
 
 methods = args.methods.split(",")
 
 results = {}
 for method in methods:
-    filename = f"plots/{args.robot}_{method}_dist_ckpt{args.ckpt}_h{args.height:02d}_run{args.run}.npy"
+    if args.discrete:
+        filename = f"plots/{args.robot}_{method}_discrete_ckpt{args.ckpt}_run{args.run}.npy"
+    else:
+        filename = f"plots/{args.robot}_{method}_dist_ckpt{args.ckpt}_h{args.height:02d}_run{args.run}.npy"
     data = np.load(filename, allow_pickle=True)
     results[method] = {k: float(v) for k, v in data[0].items()}
 
 metric_names = list(next(iter(results.values())).keys())
 
-print(f"=== {args.robot} — height {args.height}cm, ckpt {args.ckpt}, run {args.run} ===\n")
+if args.discrete:
+    print(f"=== {args.robot} — discrete terrain, ckpt {args.ckpt}, run {args.run} ===\n")
+else:
+    print(f"=== {args.robot} — height {args.height}cm, ckpt {args.ckpt}, run {args.run} ===\n")
 
 header = f"{'Metric':<20s}" + "".join(f"{m:>20s}" for m in methods)
 print(header)

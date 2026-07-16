@@ -146,9 +146,6 @@ def default_config() -> config_dict.ConfigDict:
         ),
         gait_freq=[0.5, 1.5],
         heighmap_size=(num_heightscans, num_widthscans),
-        impl=IMPL,
-        nconmax=NCONMAX,
-        njmax=NJMAX,
     )
 
 
@@ -219,9 +216,6 @@ def baseline_config() -> config_dict.ConfigDict:
         ),
         gait_freq=[0.5, 1.5],
         heighmap_size=(num_heightscans, num_widthscans),
-        impl=IMPL,
-        nconmax=NCONMAX,
-        njmax=NJMAX,
     )
 
 
@@ -292,7 +286,4 @@ def wild_config() -> config_dict.ConfigDict:
         ),
         gait_freq=[0.5, 1.5],
         heighmap_size=(num_heightscans, num_widthscans),
-        impl=IMPL,
-        nconmax=NCONMAX,
-        njmax=NJMAX,
     )
