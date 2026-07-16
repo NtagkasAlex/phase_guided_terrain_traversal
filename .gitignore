@@ -8,3 +8,5 @@ build
 install
 my_bag
 plotting
+.vscode
+Dockerfile.train

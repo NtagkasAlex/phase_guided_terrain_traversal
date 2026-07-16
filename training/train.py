@@ -134,7 +134,7 @@ def run_training(args,progress_fn):
 
   env_name = robot_cfg.ROBOT_NAME
 
-  if args.method=="pgtt":
+  if args.method in ("pgtt", "ablation_phase", "ablation_contact"):
     from robots.joystick_pgtt import Joystick
   elif args.method=="baseline":
     from robots.joystick import Joystick
@@ -151,6 +151,10 @@ def run_training(args,progress_fn):
     env_cfg=robot_cfg.baseline_config()
   elif args.method=="wild":
     env_cfg=robot_cfg.wild_config()
+  elif args.method=="ablation_phase":
+    env_cfg=robot_cfg.ablation_phase_only_config()
+  elif args.method=="ablation_contact":
+    env_cfg=robot_cfg.ablation_contact_only_config()
 
   if args.eval_flag:
       env_cfg.command_config.u_max=[0.7,0.7,0.7]
@@ -290,7 +294,7 @@ def get_max_numbered_folder(path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train PPO with MuJoCo Playground")
     parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
-    parser.add_argument('--method', type=str, default='pgtt', help='pgtt, baseline or wild')
+    parser.add_argument('--method', type=str, default='pgtt', help='pgtt, baseline, wild, ablation_phase, ablation_contact')
     parser.add_argument('--task_name', type=str, default='stairs', help='Task name: stairs or flat_terrain')
     parser.add_argument('--terrain_file', type=str, default='terrains/level04.npy', help='Path to terrain file')
     parser.add_argument('--checkpoint_folder', type=str, default=None, help='Checkpoint folder to restore from')

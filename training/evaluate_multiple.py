@@ -7,7 +7,7 @@ import sys, os
 import argparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # import your training function
-from train import *
+from training.train import *
 
 _parser = argparse.ArgumentParser(description="Evaluate multiple checkpoints")
 _parser.add_argument('--robot', type=str, default='go2', help='Robot name: go2 or anymal')
@@ -15,6 +15,8 @@ _parser.add_argument('--eval_type', type=str, default='both', help='Evaluation t
 _parser.add_argument('--run', type=int, default=0, help='Which training run to evaluate')
 _parser.add_argument('--height_min', type=int, default=1, help='Min stair height in cm (for stairs eval)')
 _parser.add_argument('--height_max', type=int, default=10, help='Max stair height in cm (for stairs eval)')
+_parser.add_argument('--levels', type=str, default='level10', help='Comma-separated curriculum levels to evaluate, e.g. level10 or level13')
+_parser.add_argument('--methods', type=str, default=None, help='Comma-separated methods to evaluate (default: all)')
 _eval_args, _ = _parser.parse_known_args()
 ROBOT = _eval_args.robot
 
@@ -98,10 +100,9 @@ def sweep_discrete(method: str, ckpt_folder: str, ckpt_id: int, run_id: int = 0)
     return copy.deepcopy(eval_metrics_all)
 
 def main():
-    METHODS = ["pgtt", "baseline", "wild"]
-    # METHODS = ["baseline"]
-    #LEVELS = ["level03", "level07", "level10", "level13"]
-    LEVELS = ["level10"]
+    ALL_METHODS = ["pgtt", "baseline", "wild", "ablation_phase", "ablation_contact"]
+    METHODS = [m.strip() for m in _eval_args.methods.split(",")] if _eval_args.methods else ALL_METHODS
+    LEVELS = [l.strip() for l in _eval_args.levels.split(",")]
     RUN = _eval_args.run
     eval_type = _eval_args.eval_type
     height_min = _eval_args.height_min

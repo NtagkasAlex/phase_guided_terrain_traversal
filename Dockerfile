@@ -72,7 +72,7 @@ COPY . /root/
 
 RUN source /opt/ros/humble/setup.bash && \
     cd /root/ros_ws && \
-    colcon build --merge-install
+    colcon build --merge-install --symlink-install
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
     echo "source /root/ros_ws/install/setup.bash" >> /root/.bashrc

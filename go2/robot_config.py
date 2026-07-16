@@ -123,7 +123,7 @@ def default_config() -> config_dict.ConfigDict:
                 feet_phase=1.0,
                 feet_swing=0.,
                 body_height=-0.,
-                contact=0.,
+                contact=0.25,
                 center=-0.,
             ),
             tracking_sigma=0.25,
@@ -222,6 +222,20 @@ def baseline_config() -> config_dict.ConfigDict:
         nconmax=NCONMAX,
         njmax=NJMAX,
     )
+
+
+def ablation_phase_only_config() -> config_dict.ConfigDict:
+    """PGTT ablation: feet_phase reward only, contact reward disabled."""
+    cfg = default_config()
+    cfg.reward_config.scales.contact = 0.0
+    return cfg
+
+
+def ablation_contact_only_config() -> config_dict.ConfigDict:
+    """PGTT ablation: contact reward only, feet_phase reward disabled."""
+    cfg = default_config()
+    cfg.reward_config.scales.feet_phase = 0.0
+    return cfg
 
 
 def wild_config() -> config_dict.ConfigDict:

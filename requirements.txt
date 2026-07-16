@@ -1,13 +1,15 @@
-mujoco
-mujoco-mjx
+jax==0.9.0
+jaxlib==0.9.0
+mujoco==3.5.0
+mujoco-mjx==3.5.0
 brax==0.13.0
-playground
+playground==0.1.0
 numpy
 matplotlib
 etils
 orbax
 ml-collections
-torch
+# torch
 opencv-python
 noise
 alive-progress
@@ -16,4 +18,4 @@ pillow
 absl-py
 pyyaml
 typing-extensions
-mujoco-warp
+# mujoco-warp
